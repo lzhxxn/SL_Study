@@ -1,12 +1,20 @@
-  package study;
+package study;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateUtilTest {
 	
+    public static String getCurrentDate(String fmt) {
+        SimpleDateFormat sdf = new SimpleDateFormat(fmt);
+        return sdf.format(new Date());
+    }
+	
 	public static void main(String[] args) {
 		String util = DateTimeUtil.getTimestamp().toString(); //Timestamp.toString() => 2021-06-10 19:57:59.303
 		System.out.println("getTimestamp() : " + util);
+		
+		System.out.println(Util.getCurrentDate("yyyyMMdd")); //현재날짜조회
 		
 		util = DateTimeUtil.getDate();
 		System.out.println("getDate() : " + util);
@@ -38,20 +46,23 @@ public class DateUtilTest {
 		long diffMillis = DateTimeUtil.diffMillis("20210626", "20210627");
 		System.out.println("diffMillis(String fromDate, String toDate) : " + diffMillis);
 		
+		
+		
 
 	}
 }
 
 /*
-getTimestamp() : 2021-06-10 15:39:46.306
-getDate() : 202106101539
-getDate(DateTimeUtil.TYPE_DATE) : 20210610
-getDate(DateTimeUtil.TYPE_TIME) : 153946
-getDate(DateTimeUtil.TYPE_DEFAULT) : 202106101539
-getDate(DateTimeUtil.TYPE_TIMESTAM) : 20210610153946324
+getTimestamp() : 2021-06-11 08:46:54.053
+20210611
+getDate() : 202106110846
+getDate(DateTimeUtil.TYPE_DATE) : 20210611
+getDate(DateTimeUtil.TYPE_TIME) : 084654
+getDate(DateTimeUtil.TYPE_DEFAULT) : 202106110846
+getDate(DateTimeUtil.TYPE_TIMESTAM) : 20210611084654074
 format(DateTimeUtil.TYPE_DATE) : yyyy-MM-dd
 format(String date, DateTimeUtil.TYPE_DATE) : 19930409
 getCalendarFromString(String date)  : Thu Jun 10 14:51:30 KST 2021
-addMin(int add) : 202106101549
+addMin(int add) : 202106110856
 diffMillis(String fromDate, String toDate) : 86400000
 */
