@@ -20,4 +20,4 @@ $.ajax(settings).done(function (response) {
   console.log(response);
 });
 
-// 미완
+// POST API
