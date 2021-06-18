@@ -1,6 +1,9 @@
 //cron-trigger을 이용해 10초마다 동작하게 만들고, 멤버변수에 tokenKey, url을 선언한다음 Connection시키고, POST방식으로 API를 연동한다.
 //현재는 www쪽이기때문에, Analyzer쪽에서 다시 코드를 짜야한다.
 //String lineMng = StringUtil.get(dao.selectAlarmMng().get("line_use_yn")); => sendMSG실행되게끔 만들어야한다. timetable을 이용해서.
+//db id / pwd 암호화 =>  
+//[root@localhost CloudESM]# cd ./tool
+//[root@localhost tool]# ./encrypt.sh admin
 
 
 public int sendMSG( String message ) {
