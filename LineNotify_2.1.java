@@ -37,7 +37,7 @@
 			            statusCode = connection.getResponseCode();
 
 			            if ( statusCode == 200 ) {
-			                //
+			                dao.insertAlarmLINE(m2); // 추가, 발송 적재 테이블 
 			            } else {
 			                throw new Exception( "Error:(StatusCode)" + statusCode + ", " + connection.getResponseMessage() );
 			            }
@@ -68,14 +68,58 @@
 		return list;
 	}
 
+	public void insertAlarmLINE(Map<String, Object> m) {
+		SqlSession session = factory.openSession();
+		try {
+			session.insert("AlarmMapper.insertAlarmLINE", m);
+			session.commit();
+		} finally {
+			session.close();
+		}
+	}
+
 	//#############################################################################
 	// Line Notify (AlarmMapper.xml)
 	//#############################################################################	
 	<select id="selectLineToken" resultType="map">
-	   SELECT DISTINCT
-		    line_token
-		FROM 
-			COM_USER
+		SELECT  a.user_id,
+			b.user_id,
+			line_token
+		FROM    ALARM_RECEIVER a,
+			COM_USER b
+		WHERE   a.user_id = b.user_id;
 	</select>
 	
+		
+//<!--#########################################################-->
+//<!--Alarm LINE Start-->
+//<!--#########################################################-->		
+	<insert id="insertAlarmLINE" parameterType="map">
+		INSERT INTO ALARM_LINE
+		(
+			line_id,
+			from_user_id,
+			from_token,
+			to_user_id,
+			to_token,
+			sms_msg,
+			stat_flag,
+			reg_time
+		)
+		SELECT (SELECT IFNULL(MAX(line_id), 0) + (@rownum := @rownum + 1) FROM ALARM_LINE),
+		       #{from_user_id},
+		       (SELECT line_token FROM COM_USER WHERE user_id = #{from_user_id}),
+		       a.user_id,
+		       b.line_token,
+		       #{sms_msg},
+		       '0',
+		       DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		FROM   ALARM_RECEIVER a,
+		       COM_USER b,
+		       (SELECT @rownum := 0) r
+		WHERE  a.user_id = b.user_id
+		AND    line_token IS NOT NULL
+		AND    line_token != ''
+	</insert>
+		
 	//기타 웹개발
