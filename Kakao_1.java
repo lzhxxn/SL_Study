@@ -1,6 +1,5 @@
 /*
 'cjagent.conf'
-
 ####################################################################
 #
 # CJAgent Config File
@@ -40,9 +39,9 @@ db_sql=sql_mysql.sql
 ..
 */
 
+
 /*
 `cjstart.sh`
-
 JAVA_HOME=/xxx/app/java/zulu11
 
 CJAGENT_HOME=/xxx/app/messenger
