@@ -63,15 +63,11 @@ export LANG=ko_KR.eucKR
 * 5. KAKAO 발송
 *############################################################*/
 
-	if(cond.get("kakao_use_yn").equals("Y")) {
-	logger.info("############################################ KAKAO_AGENT START !");
-	m2.put("sms_msg", smsMsg);
-
-	dao.insertAlarmKAKAO(m2);
-	} else {
-	logger.info("############################################ KAKAO_AGENT ERROR !");
-	}  
-
+	if (cond.get("kakao_use_yn").equals("Y")) {
+			logger.info("############################################ KAKAO_AGENT START !");
+			m2.put("sms_msg", smsMsg);
+			dao.insertAlarmKAKAO(m2);
+		}
 //#############################################################################
 // Kakao Alarm Start
 //#############################################################################	
