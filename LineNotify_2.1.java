@@ -126,7 +126,7 @@
 	//기타 웹개발
 			       
 	//AnalyzeEngineManager.java - ApplyAlarm();
-	//3. Apply LINE
+			//3. Apply LINE
 		if(cond.get("line_use_yn").equals("Y")) {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(rule.get("event_nm"));
@@ -134,8 +134,9 @@
 			
 			alarm.put("sms_msg", buffer.toString());
 			
-			List<Map<String,Object>> tokenKEY = alarmDAO.selectLineToken();
+			List<Map<String,Object>> tokenKEY = alarmDAO.selectEventLineToken(alarm);
 			for(Map<String,Object> key:tokenKEY) {
+				
 				Object token = key.get("line_token");
 				if(token instanceof String && !((String) token).isEmpty()) {
 					logger.info("#####Event LINE_NOTIFY START !");
@@ -173,7 +174,7 @@
 						statusCode = connection.getResponseCode();
 						
 						if ( statusCode == 200 ) {
-							alarmDAO.insertAlarmLINE(alarm);
+							alarmDAO.insertAlarmEventLINE(alarm);
 						} else {
 							throw new Exception( "Error:(StatusCode)" + statusCode + ", " + connection.getResponseMessage() );
 						}
@@ -185,3 +186,74 @@
 				}
 			}
 		}
+	
+	//AlarmDAO.java
+	public List<Map<String,Object>> selectEventLineToken(Map<String, Object> m) {
+			SqlSession session = factory.openSession();
+			List<Map<String,Object>> list = null;
+			try {
+				list = session.selectList("AlarmMapper.selectEventLineToken", m);			
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				session.close();
+			}
+			return list;
+		}
+	//AlarmMapper.xml
+	//selectEventLineToken
+	<select id="selectEventLineToken" resultType="map">
+		SELECT  b.user_id,
+				line_token
+		FROM    MGR_SEARCH_EVENT a,
+				MGR_SEARCH_ALARM_RECEIVER b,
+				COM_USER c
+		WHERE   a.ruleset_id = b.ruleset_id
+		AND		b.user_id = c.user_id
+		AND     a.ruleset_id = #{ruleset_id}
+		AND     event_time   = #{event_time_src}
+		AND     a.event_seq  = #{event_seq}
+		AND     IFNULL(line_token, '') != ''
+	</select>
+	
+	//insertAlarmEventLINE
+	<insert id="insertAlarmEventLINE" parameterType="map">
+		INSERT INTO ALARM_LINE (
+			line_id,
+			from_user_id,
+			from_token,
+			to_user_id,
+			to_token,
+			sms_msg,
+			stat_flag,
+			reg_time
+		)
+		SELECT (SELECT IFNULL(MAX(line_id), 0) + (@rownum := @rownum + 1) FROM ALARM_LINE),
+				       #{from_user_id},
+				       (SELECT line_token FROM COM_USER WHERE user_id = #{from_user_id}),
+				       b.user_id,
+				       c.line_token,
+				       #{sms_msg},
+				       '0',
+				       DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		FROM   MGR_SEARCH_EVENT a,
+		       MGR_SEARCH_ALARM_RECEIVER b,
+		       COM_USER c,
+		       (SELECT @rownum := 0) s
+		WHERE  a.ruleset_id = b.ruleset_id
+		AND    b.user_id    = c.user_id
+		AND    a.ruleset_id = #{ruleset_id}
+		AND    event_time   = #{event_time_src}
+		AND    event_seq    = #{event_seq}
+		AND    IFNULL(mobile_no, '') != ''
+		AND    (b.user_id, a.group_cd) NOT IN (
+			SELECT r.user_id,
+			       cust_id
+			FROM   MGR_SEARCH_ALARM_RECEIVER r,
+			       COM_USER_CUST u
+			WHERE  r.user_id    = u.user_id
+			AND    r.ruleset_id = #{ruleset_id}
+			AND    cust_id     != IF(a.group_cd IS NOT NULL, a.group_cd, '')
+		)
+	</insert>
+	
