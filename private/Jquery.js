@@ -1,184 +1,47 @@
-/*
-- 🧩 javascript의 가장 대중적인 라이브러리인 **jQuery**가 부족해서 공부하기 
+//' text() vs .html() '
+//javascript의 innerHTML, innerTEXT 와 같은 기능을 하는 함수가 jQuery에도 존재한다.
 
-### 1. jQuery로 CSS 수정하기
-***
-- **.css(attribute, value) 함수**를 사용하면 해당 DOM의 CSS를 변경할 수 있다.
+//.text() : html 태그는 제외하고 문자열만 가져온다.
+//.html() : html 태그를 포함한 문자열을 가져온다.
 
-<!DOCTYPE html>
-<html>
- <head>
-  <meta charset="UTF-8">
-  <title>Insert title here</title>
-  
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  
- </head>
- <body>
- 
-   <h1 class="cls" style="background-color: pink">H1 tag</h1>
-   <p id="ptag">hello world!!!</p>
-   
-   <button type="button" name="button" id="changeSize">Bigger!</button>
-   <button type="button" name="button" id="changeBg">Background change!</button>
-   <button type="button" name="button" id="changeHeight">Taller!</button>
-   <button type="button" name="button" id="changeWidth">More Slim!</button>
-   
-   <script type="text/javascript">
-    $(document).ready(function() {
-     $('h1.cls').click(function() {
-      $(this).css("background-color", "lightgreen");
-    });
-    
-     $('#changeSize').click(function() {
-      $('p#ptag').css("font-size", "30px");
-    });
-    
-     $('#changeBg').click(function() {
-      $('p#ptag').css("background-color", "lightgreen");
-    });
-    
-     $('#changeHeight').click(function() {
-      $('p#ptag').css("height", "50px");
-    });
-    
-     $('#changeWidth').click(function() {
-      $('p#ptag').css("width", "200px");
-    });
-  });
-  </script>
- </body>
-</html>
-```
-- h1 태그를 클릭하면 배경화면이 바뀐다.
-- 각 버튼을 누르면 정해진 css가 변경된다.
-
-### 2. fade 액션
-***
-- jQuery를 사용하여 요소에 간단한 fade 액션을 줄수 있습니다.
-- fade in, fade out 같은 애니메이션을 적용할 수 있습니다
-
-```
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Insert title here</title>
-    <script
-            src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  </head>
-  <body>
-
-    <!-- fade in, fade out, toggle -->
-    <div id="div1" style="width: 50%; height: 80px; background-color: skyblue;"></div>
-    <div id="div2" style="width: 50%; height: 80px; background-color: lightgreen;"></div>
-    <div id="div3" style="width: 50%; height: 80px; background-color: pink;"></div>
-    
-    <br>
-    <button type="button" id="fadein">fade in</button>
-    <button type="button" id="fadeout">fade out</button>
-    <button type="button" id="fadetoggle">fade toggle</button>
-    
-    <script type="text/javascript">
-     $(document).ready(function() {
-     
-     // fade in, fade out, toggle
-     $('#fadein').click(function() {
-      $('#div1').fadeIn(1000);
-      $('#div2').fadeIn(2000);
-      $('#div3').fadeIn(3000);
-    });
-    
-    $('#fadeout').click(function() {
-      $('#div1').fadeOut(1000);
-      $('#div2').fadeOut(2000);
-      $('#div3').fadeOut(3000);
-        });
-
-    $('#fadetoggle').click(function() {
-      $('#div1').fadeToggle(1000);
-      $('#div2').fadeToggle(2000);
-      $('#div3').fadeToggle(3000);
-    });
-  });
-    </script>
-  </body>
-</html>
- ```
- ### 3.  input 태그 foncus 액션
- ***
- - jQuery를 사용하면 input 태그에 focus 됐을 때, 행동을 정의할 수 있습니다.
-
-```
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
-    <title>input focus</title>
+    <title>jquery DOM</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   </head>
   <body>
-    <span>ID : </span>
-    <input type="text" name="id" value="">
+  <!--
+  DOM (Document Object Model)
 
-    <span>PWD : </span>
-    <input type="password" name="pwd" value="">
+  javascript : .innerHTML, .value
+  jQuery : .val(), .text(), .html(), .attr()
+  -->
 
-    <script type="text/javascript">
-      // focus 됐을 때 border와 배경화면 색을 변경합니다.
-      $('input').focus(function () {
-        $(this).css('border', '1px solid skyblue');
-        $(this).css('background-color', 'yellow');
+  <p id="loremtext">
+    <b>Lorem ipsum dolor sit amet, consectetur adipisicing elit,</b> sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. <br><br><br>Ut enim ad minim veniam, quis nostrud exercitation.
+  </p>
+
+
+  <button type="button" name="button" id="btn1">Show Text</button>
+  <button type="button" name="button" id="btn2">Show HTML</button>
+
+
+  <script type="text/javascript">
+    $(function(){
+
+      // .text()는 텍스트만 불러온다.
+      $('#btn1').click(function () {
+        alert($('#loremtext').text());
       });
 
-      // focus가 out됐을 때 border와 배경화면 색을 변경합니다.
-      $('input').focusout(function () {
-        $(this).css('border', '1px solid red');
-        $(this).css('background-color', 'white');
+      // .html()은 html태그까지 전부 불러온다.
+      $('#btn2').click(function () {
+        alert($('#loremtext').html());
       });
-    </script>
+    });
+  </script>
   </body>
 </html>
-```
-  
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Insert title here</title>
-    <script
-            src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
-  </head>
-  <body>
-    <ul id="list">
-      <li>coffee
-        <ul>
-          <li>black</li>
-          <li>milk</li>
-        </ul>
-      </li>
-      <li>red tea</li>
-      <li id="greentea">green tea</li>
-    </ul>
-
-    <button type="button" name="button" id="deleteGreenBtn">green tea 숨기기</button>
-    <button type="button" name="button" id="delChildBtn">black 숨기기</button>
-
-    <script type="text/javascript">
-      $(document).ready(function () {
-
-        // 리스트 요소를 숨기는 첫번째 방법
-        $('#deleteGreenBtn').click(function () {
-          $('li#greentea').hide();
-        });
-
-        // 리스트 자식 요소를 숨기는 두번째 방법
-        $('#delChildBtn').click(function () {
-          // ul 속 첫번째 li 안에 ul 안에 첫번째 li를 숨긴다.
-          $('#myList li:first ul li:first').hide();
-        });
-      });
-    </script>
-
-  </body>
-</html>
