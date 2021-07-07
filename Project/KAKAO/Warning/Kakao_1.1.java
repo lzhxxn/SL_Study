@@ -25,30 +25,28 @@
 //<!--#########################################################-->
 //<!--AlarmMapper.xml-->
 //<!--#########################################################-->	
-    
-	<insert id="insertAlarmKAKAO" parameterType="map">	
+    <insert id="insertAlarmKAKAO" parameterType="map">	
 		INSERT INTO KKO_MSG
 		(
 			REQDATE,
+			SENTDATE,
 			STATUS,
 			PHONE,
 			CALLBACK,
 			PROFILE_KEY, 
 			MSG,
 	 		TEMPLATE_CODE,
-	 		FAILED_TYPE,
-	 		FAILED_SUBJECT,
-	 		FAILED_MSG
+	 		EVENT_TIME
 	 		)
 		SELECT DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			   DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
 			   '1',
 			   REPLACE(mobile_no, '-', ''),
-			   (SELECT REPLACE(mobile_no, '-', '') FROM COM_USER WHERE user_id = #{from_user_id}),
+			   '01075358543',
+			   'seculayer',
 			   #{sms_msg},
-			   'A001_01',
-			   'SMS',
-			   '제목',
-			   '재전송 내용 SMS')
+			   #{template_code},
+			   #{event_time}
 		FROM   ALARM_RECEIVER a,
 			       COM_USER b,
 			       (SELECT @rownum := 0) r
