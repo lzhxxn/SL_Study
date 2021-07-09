@@ -51,7 +51,7 @@
 //<!--#########################################################-->
 //<!--Alarm KAKAO Start-->
 //<!--#########################################################-->	
-	<insert id="insertAlarmKAKAO" parameterType="map">	
+		<insert id="insertAlarmKAKAO" parameterType="map">	
 		INSERT INTO KKO_MSG
 		(
 			REQDATE,
@@ -70,7 +70,7 @@
 			REPLACE(mobile_no, '-', ''),
 			'07046037320',
 			'6fafadad09e06fcc7af9f1614502f39cf20fd3bc',
-			CONCAT('eyeCloudSIM Alert:' ,'SL', ' ', #{sms_msg}),
+			CONCAT('eyeCloudSIM Alert:' ,#{event_time}, ' ', #{sms_msg}),
 			'A001_01',
 			'No',
 			'No',
