@@ -1,17 +1,30 @@
+ê¸°ì¡´ ì½”ë“œ
+{ text: _SL.getMessage("FLD.COM.0227")+"(%)", datafield: 'file_press', width:'5%', cellsalign:'center',
+	cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata){
+		return $(defaulthtml).html('<div data-ui="tooltip" data-text="ì›ë³¸ZIP/ì›ë³¸íŒŒì¼í¬ê¸°">'+value.toFixed(2)+'%</div>')[0].outerHTML;
+	}
+},
+	
+=> toFixed() ë©”ì†Œë“œëŠ” ìˆ«ìì˜ ì†Œìˆ˜ì ì„ ì œí•œí•˜ëŠ” ë©”ì†Œë“œì´ë‹¤. valueê°’ì´ String í˜•íƒœë¡œ ë„˜ì–´ì™€ì„œ toFixedê°€ ì‹¤í–‰ë˜ì§€ì•Šê³  ë¬´í•œë¡œë”©ì´ ëœ ìƒí™©.
+   Number í˜•íƒœë¡œ í˜•ë³€í™˜ í•´ì£¼ê³ , 0.0ì€ ë³´ê¸°ì— ì•ˆì¢‹ê¸° ë•Œë¬¸ì— 0ì¼ê²½ìš° toFixed(1)ë¡œ ì²˜ë¦¬í•˜ëŠ” ì¡°ê±´ì„ ê±¸ì–´ì¤¬ë‹¤.
 
-ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ ÄÚµå
+
+   
+   
+
+ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì½”ë“œ
 { text: _SL.getMessage("FLD.COM.0227")+"(%)", datafield: 'file_press', width:'5%', cellsalign:'center',
 	cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata){
 		var filePress = Number(value);
-		if (filePress == 0) return $(defaulthtml).html('<div data-ui="tooltip" data-text="¿øº»ZIP/¿øº»ÆÄÀÏÅ©±â">'+ filePress +'%</div>')[0].outerHTML;
-		return $(defaulthtml).html('<div data-ui="tooltip" data-text="¿øº»ZIP/¿øº»ÆÄÀÏÅ©±â">'+ filePress.toFixed(1) +'%</div>')[0].outerHTML;
+		if (filePress == 0) return $(defaulthtml).html('<div data-ui="tooltip" data-text="ì›ë³¸ZIP/ì›ë³¸íŒŒì¼í¬ê¸°">'+ filePress +'%</div>')[0].outerHTML;
+		return $(defaulthtml).html('<div data-ui="tooltip" data-text="ì›ë³¸ZIP/ì›ë³¸íŒŒì¼í¬ê¸°">'+ filePress.toFixed(1) +'%</div>')[0].outerHTML;
 	}
 },
 
 
-1> ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ Á¦°Å
+1> ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì œê±°
 
-ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ ÄÚµå
+ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì½”ë“œ
 { text: _SL.getMessage("FLD.COM.0227")+"(%)", datafield: 'file_press', width:'5%', cellsalign:'center',
 	cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata){
 		var i = Number(value);
@@ -20,25 +33,25 @@
 		else{
 			i = Number(value).toFixed(1);
 		}
-		return $(defaulthtml).html('<div data-ui="tooltip" data-text="¿øº»ZIP/¿øº»ÆÄÀÏÅ©±â">'+ i +'%</div>')[0].outerHTML;
+		return $(defaulthtml).html('<div data-ui="tooltip" data-text="ì›ë³¸ZIP/ì›ë³¸íŒŒì¼í¬ê¸°">'+ i +'%</div>')[0].outerHTML;
 },
 
 	
-2> ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ Á¦°Å 2
+2> ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì œê±° 2
 
-ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ ÄÚµå
+ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì½”ë“œ
 { text: _SL.getMessage("FLD.COM.0227")+"(%)", datafield: 'file_press', width:'5%', cellsalign:'center',
 	cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata){
 		var i = Number(value);
 		if(value != 0){
 			i = i.toFixed(1);
 		}
-		return $(defaulthtml).html('<div data-ui="tooltip" data-text="¿øº»ZIP/¿øº»ÆÄÀÏÅ©±â">'+ i +'%</div>')[0].outerHTML;
+		return $(defaulthtml).html('<div data-ui="tooltip" data-text="ì›ë³¸ZIP/ì›ë³¸íŒŒì¼í¬ê¸°">'+ i +'%</div>')[0].outerHTML;
 },
 
 
-3> ÀÚ¹Ù½ºÅ©¸³Æ® Áßº¹ Á¦°Å ¿¬½À
-{ text: "ÇöÀçZIP", datafield: 'cur_file_size', cellsalign:'center', width:'6%',
+3> ìë°”ìŠ¤í¬ë¦½íŠ¸ ì¤‘ë³µ ì œê±° ì—°ìŠµ
+{ text: "í˜„ì¬ZIP", datafield: 'cur_file_size', cellsalign:'center', width:'6%',
 	cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata){
 		//var curFileSize = rowdata.cur_file_size;
 		//if(curFileSize == null) return $(defaulthtml).html('<div></div>')[0].outerHTML;
