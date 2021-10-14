@@ -1,0 +1,725 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seculayer.web.system.dao.UserDAO">
+	<!-- ***** ComUser Start ***** -->
+	<select id="selectComUserRoleList" resultType="map">
+		SELECT
+			role_id,
+			role_nm
+		FROM
+			COM_USER_ROLE
+		<where>
+			<if test="role_id != -1">
+				role_id != -1
+			</if>
+		</where>
+		ORDER BY role_id
+	</select>
+	
+	<select id="selectComUserRole" resultType="map">
+		SELECT
+			role_id,
+			role_nm
+		FROM
+			COM_USER_ROLE
+		WHERE role_id = #{role_id}
+		ORDER BY role_id
+	</select>
+	
+	<select id="selectComUserCustInfo" resultType="map">
+		SELECT
+			A.user_id,
+			GROUP_CONCAT(code_name) cust_nm
+		FROM	COM_USER_CUST A
+		LEFT JOIN
+				COM_CODE B
+		  ON code_type = 'CS0011'
+		  AND A.cust_id = B.code_id
+		WHERE user_id IN (
+		<foreach item="map" index="index" collection="list" separator=",">
+			#{map.user_id}
+   		</foreach>
+   		)
+		GROUP BY A.user_id
+	</select>
+
+	<update id="updateRoleName" parameterType="map">
+		UPDATE COM_USER_ROLE SET 
+			role_nm = #{role_nm}
+		WHERE 
+			role_id = #{role_id}
+	</update>
+	<select id="checkRoleName" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM 
+			COM_USER_ROLE
+		WHERE
+			role_nm = #{role_nm} and role_id != #{role_id}
+	</select>
+	
+		<select id="selectComUserListAll" resultType="map">
+		SELECT
+		    user_id,
+		    user_nm,
+		    passwd,
+		    tel_no,
+		    mobile_no,
+		    mail_addr,
+		    role_id,
+		    group_cd,
+		    auth_ip,
+		    description,
+		    DATE_FORMAT(STR_TO_DATE(reg_dt, '%Y%m%d%H%i%s'), '%Y-%m-%d %H:%i:%s') as reg_dt,
+		    (SELECT role_nm FROM COM_USER_ROLE b WHERE b.role_id = a.role_id) as role_nm,
+		    login_menu_id,
+		    line_token
+		FROM 
+			COM_USER a
+		<where>
+			<if test="role_id != -1">
+				AND role_id != -1
+			</if>
+			<if test="u_del_yn != null and u_del_yn != ''">
+			AND del_yn = #{u_del_yn}
+			</if>
+		</where>
+		ORDER BY user_nm
+	</select>
+	
+	<select id="selectComUserListCount" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM COM_USER
+		<where>
+			<if test="role_id != -1">
+				AND role_id != -1
+			</if>
+			<if test="login_user_ids != null and login_user_ids.size > 0 ">
+				AND user_id IN (
+				<foreach item="login_id" collection="login_user_ids" separator=",">
+					#{login_id}
+				</foreach>
+				)
+			</if>
+			<if test="s_user_id != null and s_user_id != ''">
+			AND user_id LIKE CONCAT('%',#{s_user_id},'%')	
+			</if>
+			<if test="s_user_nm != null and s_user_nm != ''">
+			AND user_nm LIKE CONCAT('%',#{s_user_nm},'%')
+			</if>
+			<if test="s_group_cd != null and s_group_cd != ''">
+			AND group_cd = #{s_group_cd}
+			</if>
+			AND del_yn = "N"
+		</where>
+	</select>
+	
+	<select id="selectComUserList" resultType="map">
+		SELECT
+		    user_id,
+		    user_nm,
+		    passwd,
+		    tel_no,
+		    mobile_no,
+		    mail_addr,
+		    role_id,
+		    group_cd,
+		    auth_ip,
+		    description,
+		    last_conn_dt,
+		    reg_dt,
+		    pswd_upd_dt,
+		    user_img,
+		    line_token,
+		    (SELECT role_nm FROM COM_USER_ROLE b WHERE b.role_id = a.role_id) as role_nm
+		FROM 
+			COM_USER a
+		<where>
+			<if test="role_id != -1">
+				AND role_id != -1
+			</if>
+			<if test="login_user_ids != null and login_user_ids.size > 0 ">
+				AND user_id IN (
+				<foreach item="login_id" collection="login_user_ids" separator=",">
+					#{login_id}
+				</foreach>
+				)
+			</if>
+			<if test="s_user_id != null and s_user_id != ''">
+			AND user_id LIKE CONCAT('%',#{s_user_id},'%')	
+			</if>
+			<if test="s_user_nm != null and s_user_nm != ''">
+			AND user_nm LIKE CONCAT('%',#{s_user_nm},'%')
+			</if>
+			<if test="s_group_cd != null and s_group_cd != ''">
+			AND group_cd = #{s_group_cd}
+			</if>
+			AND del_yn = "N"
+		</where>
+		ORDER BY user_id
+		<choose>
+			<when test="recordstartindex==null">
+				LIMIT 0, 10
+			</when>
+			<otherwise>
+				LIMIT #{recordstartindex}, #{pagesize}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectComUser" resultType="map">
+		 SELECT
+		    user_id,
+		    user_nm,
+		    passwd,
+		    tel_no,
+		    mobile_no,
+		    mail_addr,
+		    role_id,
+		    group_cd,
+		    auth_ip,
+		    description,
+		    reg_dt,
+		    login_menu_id,
+		    alarm_mode,
+		    sync_yn,
+		    del_yn,
+		    line_token,
+		    user_img,
+		    (SELECT role_nm FROM COM_USER_ROLE b WHERE b.role_id = a.role_id) as role_nm
+		FROM 
+			COM_USER a
+		WHERE
+			user_id = #{user_id}
+	</select>
+	<select id="selectComUserCustList" resultType="map">
+		SELECT
+			user_id, cust_id
+		FROM COM_USER_CUST
+		<where>
+			<if test="user_id != null and user_id != ''">
+			AND user_id = #{user_id}
+			</if>
+		</where>
+	</select>
+	
+	<select id="selectComUserSyncMng" resultType="map">
+		SELECT 	sync_yn,
+				sync_time, 
+				jdbc_id,
+				ref_query,
+				user_id_fld, 
+				user_nm_fld, 
+				tel_no_fld, 
+				tel_no_val, 
+				mobile_no_fld, 
+				mobile_no_val, 
+				mail_addr_fld, 
+				mail_addr_val, 
+				role_id_fld, 
+				role_id_val, 
+				group_cd_fld, 
+				group_cd_val, 
+				desc_fld, 
+				desc_val, 
+				last_sync_time
+		FROM COM_USER_SYNC_MNG
+	</select>
+	
+	<select id="selectUseSyncComUserList" resultType="map">
+		SELECT user_id,
+			   user_nm,
+			   passwd,
+			   tel_no,
+			   mobile_no,
+			   mail_addr,
+			   role_id,
+			   group_cd,
+			   description,
+			   sync_yn,
+			   del_yn
+		FROM COM_USER
+		WHERE sync_yn = 'Y'
+		AND del_yn = 'N'
+	</select>
+	
+	<select id="selectDelComUserList" resultType="map">
+		SELECT user_id,
+			   user_nm,
+			   passwd,
+			   tel_no,
+			   mobile_no,
+			   mail_addr,
+			   role_id,
+			   group_cd,
+			   description,
+			   sync_yn,
+			   del_yn
+		FROM COM_USER
+		WHERE del_yn = 'Y'
+	</select>
+	
+	<select id="selectUseManualComUserList" resultType="map">
+		SELECT user_id,
+			   user_nm,
+			   passwd,
+			   tel_no,
+			   mobile_no,
+			   mail_addr,
+			   role_id,
+			   group_cd,
+			   description,
+			   sync_yn,
+			   del_yn
+		FROM COM_USER
+		WHERE sync_yn = 'N'
+		AND del_yn = 'N'
+	</select>
+	
+	<select id="checkComUser" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM 
+			COM_USER
+		WHERE
+			user_id = #{user_id}
+	</select>
+		<insert id="insertComUser" parameterType="map">
+		INSERT INTO COM_USER (
+			user_id,
+		    user_nm,
+		    passwd,
+		    pswd_upd_dt,
+		    tel_no,
+		    mobile_no,
+		    mail_addr,
+		    role_id,
+		    group_cd,
+		    auth_ip,
+		    sync_yn,
+		    description,
+		    reg_dt,
+		    proc_id,
+		    proc_ip,
+		    proc_dt,
+		    login_menu_id,
+		    line_token
+		)
+		VALUES ( 
+			#{user_id},
+		    #{user_nm},
+		    #{passwd},
+		    DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+		    #{tel_no},
+		    #{mobile_no},
+		    #{mail_addr},
+		    #{role_id},
+		    #{group_cd},
+		    #{auth_ip},
+		    #{sync_yn},
+		    #{description},
+			DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+		    #{proc_id},
+		    #{proc_ip},
+			DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+			#{login_menu_id},
+			#{line_token}
+		)
+	</insert>
+	<insert id="insertUserCust" parameterType="map">
+		INSERT INTO COM_USER_CUST (
+			user_id,
+			cust_id
+		)
+		VALUES (
+			#{user_id},
+			#{cust_id}
+		)
+	</insert>
+	
+			<update id="updateComUser" parameterType="map">
+		UPDATE COM_USER SET
+			<if test="passwd != null and passwd != ''">
+				pswd_upd_dt = CASE WHEN passwd != #{passwd} THEN DATE_FORMAT(NOW(),'%Y%m%d%H%i%S') ELSE pswd_upd_dt END,
+				passwd = CASE WHEN passwd != #{passwd} THEN #{passwd} ELSE passwd END,
+			</if>
+			user_nm = #{user_nm},
+		    tel_no = #{tel_no},
+		    mobile_no = #{mobile_no},
+		    mail_addr = #{mail_addr},
+		    role_id = #{role_id},
+		    group_cd = #{group_cd},
+		    auth_ip = #{auth_ip},
+		    sync_yn = #{sync_yn},
+		    description = #{description},
+		    proc_id = #{proc_id},
+		    proc_ip = #{proc_ip},
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+		    login_menu_id = #{login_menu_id},
+		    line_token = #{line_token}
+		WHERE
+			user_id = #{user_id}
+	</update>
+	
+	<delete id="deleteComUser" parameterType="map">
+		 DELETE FROM COM_USER
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	
+	<update id="updateComUserDelYn" parameterType="map">
+		UPDATE COM_USER SET
+			del_yn 	= 'Y',
+		    proc_id = #{proc_id},
+		    proc_ip = #{proc_ip},
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		WHERE user_id = #{user_id}
+	</update>
+	
+	<delete id="deleteUserComponent" parameterType="map">
+		 DELETE FROM VW_USER_COMPONENT
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	<delete id="deleteUserDashboard" parameterType="map">
+		 DELETE FROM VW_USER_DASHBOARD
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	<delete id="deleteUserMyFilterField" parameterType="map">
+		 DELETE FROM VW_USER_MYFILTER_FIELD
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	<delete id="deleteUserMyFilter" parameterType="map">
+		 DELETE FROM VW_USER_MYFILTER
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	<delete id="deleteUserCust" parameterType="map">
+		 DELETE FROM COM_USER_CUST
+		 WHERE
+		 	user_id = #{user_id}
+	</delete>
+	<insert id="insertComUserSyncMng" parameterType="map">
+		INSERT INTO COM_USER_SYNC_MNG (
+			sync_yn,
+			sync_time,
+			jdbc_id,
+			ref_query,
+			user_id_fld, 
+			user_nm_fld, 
+			tel_no_fld, 
+			tel_no_val, 
+			mobile_no_fld, 
+			mobile_no_val, 
+			mail_addr_fld, 
+			mail_addr_val, 
+			role_id_fld, 
+			role_id_val, 
+			group_cd_fld, 
+			group_cd_val, 
+			desc_fld, 
+			desc_val, 
+			last_sync_time, 
+			proc_id, 
+			proc_ip, 
+			proc_dt
+		)
+		VALUES (
+			#{sync_yn},
+			#{sync_time},
+			#{jdbc_id},
+			#{ref_query},
+			#{user_id_fld},
+			#{user_nm_fld},
+			#{tel_no_fld},
+			#{tel_no_val},
+			#{mobile_no_fld},
+			#{mobile_no_val},
+			#{mail_addr_fld},
+			#{mail_addr_val},
+			#{role_id_fld},
+			#{role_id_val},
+			#{group_cd_fld},
+			#{group_cd_val},
+			#{desc_fld},
+			#{desc_val},
+			#{last_sync_time},
+			#{proc_id},
+			#{proc_ip},
+			DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		)
+	</insert>
+	<update id="updateComUserSyncMng" parameterType="map">
+		UPDATE COM_USER_SYNC_MNG SET
+			sync_yn = #{sync_yn},
+			sync_time = #{sync_time},
+			jdbc_id = #{jdbc_id},
+			ref_query = #{ref_query},
+			user_id_fld = #{user_id_fld}, 
+			user_nm_fld = #{user_nm_fld}, 
+			tel_no_fld = #{tel_no_fld}, 
+			tel_no_val = #{tel_no_val}, 
+			mobile_no_fld = #{mobile_no_fld}, 
+			mobile_no_val = #{mobile_no_val}, 
+			mail_addr_fld = #{mail_addr_fld},
+			mail_addr_val = #{mail_addr_val}, 
+			role_id_fld = #{role_id_fld}, 
+			role_id_val = #{role_id_val}, 
+			group_cd_fld = #{group_cd_fld}, 
+			group_cd_val = #{group_cd_val}, 
+			desc_fld = #{desc_fld}, 
+			desc_val = #{desc_val},
+			proc_id = #{proc_id}, 
+			proc_ip = #{proc_ip}, 
+			proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+	</update>
+	
+	<insert id="insertComUserSync" parameterType="map">
+		INSERT INTO COM_USER (
+			user_id,
+		    user_nm,
+		    passwd,
+		    pswd_upd_dt,
+			pswd_mail_send_yn,
+		    tel_no,
+		    mobile_no,
+		    mail_addr,
+		    role_id,
+		    group_cd,
+		    login_menu_id,
+		    sync_yn,
+		    description,
+		    reg_dt,
+		    proc_id,
+		    proc_ip,
+		    proc_dt
+		)
+		VALUES ( 
+			#{user_id},
+		    #{user_nm},
+		    '',
+		    null,
+		    'N',
+		    #{tel_no},
+		    #{mobile_no},
+		    #{mail_addr},
+		    #{role_id},
+		    #{group_cd},
+		    '0',
+		    'Y',
+		    #{description},
+			DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+		    #{proc_id},
+		    #{proc_ip},
+			DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		)
+	</insert>
+	
+	<update id="updateComUserSync" parameterType="map">
+		UPDATE COM_USER SET
+			<if test="user_nm != null and user_nm != ''">user_nm = #{user_nm},</if>
+			<if test="org_tel_no != null and org_tel_no != ''">tel_no = #{org_tel_no},</if>
+			<if test="org_mobile_no != null and org_mobile_no != ''">mobile_no = #{org_mobile_no},</if>
+			<if test="org_mail_addr != null and org_mail_addr != ''">mail_addr = #{org_mail_addr},</if>
+			<if test="org_role_id != null and org_role_id != ''">role_id = #{org_role_id},</if>
+			<if test="org_group_cd != null and org_group_cd != ''">group_cd = #{org_group_cd},</if>
+			<if test="org_description != null and org_description != ''">description = #{org_description},</if>
+		    proc_id = #{proc_id},
+		    proc_ip = #{proc_ip},
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		WHERE
+			user_id = #{user_id}
+	</update>
+	
+	<update id="updateComUserSyncForDelUser" parameterType="map">
+		UPDATE COM_USER SET
+			user_nm = #{user_nm},
+			passwd = '',
+			pswd_upd_dt = null,
+			pswd_mail_send_yn = 'N',
+			tel_no = #{tel_no},
+			mobile_no = #{mobile_no},
+			mail_addr = #{mail_addr},
+			role_id = #{role_id},
+			group_cd = #{group_cd},
+			description = #{description},
+		    sync_yn = 'Y',
+		    proc_id = #{proc_id},
+		    proc_ip = #{proc_ip},
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'),
+		    del_yn = 'N'
+		WHERE
+			user_id = #{user_id}
+	</update>
+	
+	<update id="updateComUserSyncDelYn" parameterType="map">
+		UPDATE COM_USER SET
+			del_yn 	= 'Y',
+		    proc_id = #{proc_id},
+		    proc_ip = #{proc_ip},
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		WHERE user_id = #{user_id}
+	</update>
+	
+	<update id="updateLastSyncTime" parameterType="map">
+		UPDATE COM_USER_SYNC_MNG SET
+			last_sync_time = DATE_FORMAT(NOW(),'%Y%m%d%H%i')
+	</update>
+	
+	<update id="updateComUserPswdMailSend" parameterType="map">
+		UPDATE COM_USER SET
+			pswd_mail_send_yn = 'Y'
+		WHERE user_id = #{user_id}
+	</update>
+	<!-- ***** ComUser End ***** -->
+
+	<!-- ***** Auth Manager Start ***** -->
+	<select id="selectMenuAuthList" resultType="map">
+		SELECT 
+			A.menu_id,
+			A.menu_cate,
+			SUBSTRING(A.menu_cate, 1, A.menu_level * 2) AS group_key,
+			SUBSTRING(A.menu_cate, 1, (A.menu_level - IF(A.menu_level = 1, 0, 1))* 2) AS p_group_key,
+			A.menu_nm,
+			A.menu_detail,
+			A.menu_url,
+			A.menu_param,
+			A.menu_div,
+			A.menu_order,
+			A.menu_level,
+			A.use_yn,
+			A.reg_dt,
+			A.menu_type,
+			IF((SELECT MAX(menu_id) FROM COM_ROLE_MENU WHERE menu_id = A.menu_id AND role_id = #{role_id}) IS NULL, 'false','true') AS sel_opt
+		FROM 
+			COM_MENU A 
+		INNER JOIN COM_MENU B ON SUBSTRING(A.menu_cate, 1, 10) = SUBSTRING(B.menu_cate, 1, 10)
+		INNER JOIN COM_SVC_MENU C 
+		ON B.menu_id = C.menu_id
+		AND (C.menu_type = 'default'
+			<if test="addonIdArr != null and addonIdArr.size() > 0">
+			OR C.menu_type IN 
+				<foreach item="addonId" collection="addonIdArr" open="(" separator="," close=")">
+					LOWER('${addonId}')
+				</foreach>
+			</if>
+		)
+		WHERE A.use_yn = 'Y'
+		  AND B.use_yn = 'Y'
+		  AND A.menu_div != 'S'	-- Sub Function은 동일 menu_cate 권한을 따르므로 제외
+		  <if test="role_id != -1">
+		  	AND A.menu_id != 307 AND A.menu_id != 308
+		  </if>
+		ORDER BY A.menu_level, IF(A.menu_div = 'F', 9, IF(A.menu_div = 'P', 2, 1)), A.menu_order, A.menu_cate;
+	</select>
+	
+	<insert id="insertComRoleMenu" parameterType="map">
+		INSERT INTO COM_ROLE_MENU (
+			role_id,
+		    menu_id
+		)
+		VALUES 
+		<foreach item="menuId" collection="menuIdList" open="(" separator="),(" close=")">
+			#{role_id}, #{menuId}
+		</foreach>
+	</insert>
+	
+	<select id="selectComRoleMenu" resultType="map">
+		SELECT SUBSTRING(A.menu_cate, 1, 2) AS menu_cate, 
+		       A.menu_url, 
+		       A.menu_nm
+		FROM COM_MENU A 
+		INNER JOIN COM_MENU B ON SUBSTRING(A.menu_cate, 1, 10) = SUBSTRING(B.menu_cate, 1, 10)
+		AND B.use_yn = 'Y'
+		INNER JOIN COM_SVC_MENU C 
+		ON B.menu_id = C.menu_id
+		AND (C.menu_type = 'default'
+			<if test="addonIdArr != null and addonIdArr.size() > 0">
+			OR C.menu_type IN 
+				<foreach item="addonId" collection="addonIdArr" open="(" separator="," close=")">
+					LOWER('${addonId}')
+				</foreach>
+			</if>
+		)
+		INNER JOIN COM_ROLE_MENU D
+		ON D.role_id = #{role_id}
+		AND A.menu_id = D.menu_id
+		WHERE A.use_yn = 'Y' AND A.menu_div = 'F' AND A.menu_type = '1'
+		ORDER BY A.menu_cate;
+	</select>
+	
+	<select id="manageMenuCount" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM 
+			COM_ROLE_MENU CRM, 
+			COM_MENU CM 
+		WHERE 
+			CRM.role_id = #{user.role_id} 
+		AND CRM.menu_id = CM.menu_id 
+		AND CM.use_yn = 'Y'
+		AND CM.menu_type = 1;
+	</select>
+	
+	<delete id="deleteComRoleMenu">
+		 DELETE FROM COM_ROLE_MENU
+		 WHERE role_id = #{role_id}
+	</delete>
+	<!-- ***** Auth Manager End ***** -->
+	
+	<select id="selectPasswdRule" resultType="map">
+		SELECT * 
+		FROM PASSWORD_MNG;
+	</select>
+	
+	<select id="selectPasswdRuleCount" resultType="int">
+		SELECT COUNT(*)
+		FROM PASSWORD_MNG;
+	</select>
+	
+	<select id="checkComUserPasswd" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM 
+			COM_USER
+		WHERE
+			user_id = #{p_user_id}
+			AND passwd = #{p_user_passwd}
+	</select>
+	
+	
+	<select id="checkComUserHistoryPasswd" resultType="int">
+		SELECT
+		    COUNT(*)
+		FROM 
+			PASSWORD_HISTORY
+		WHERE
+			user_id = #{p_user_id}
+			AND passwd = #{p_user_passwd}
+	</select>
+	
+	<update id="updatePasswdRule" parameterType="map">
+		UPDATE PASSWORD_MNG SET 
+			upper_case_yn  = #{upper_case_yn},
+		    lower_case_yn  = #{lower_case_yn},
+		    number_yn  = #{number_yn},
+		    special_character_yn  = #{special_character_yn},
+		    length  = #{length},
+		    period  = #{period},
+		    alarm_period  = #{alarm_period},
+		    mail_yn  = #{mail_yn},
+		    continum_yn = #{continum},
+		    contichar_yn = #{contichar}
+	</update>
+	
+	<update id="updateImg" parameterType="map">
+		UPDATE COM_USER SET 
+			user_img = #{user_img}
+		WHERE 
+			user_id = #{user_id}
+	</update>
+	
+</mapper>

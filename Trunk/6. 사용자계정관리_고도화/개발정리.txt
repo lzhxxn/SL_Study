@@ -1,0 +1,22 @@
+[사용자계정관리 고도화]
+
+1. 아이디찾기
+매칭 X ==> '일치하는 정보가 없습니다.' 수정
+
+2. passwd 빈값
+'사용자정보연동시' 빈 값으로 불러온다.  ==> "비밀번호설정" Form 
+
+3. 신청/거절/승인시 Mail 발송 
+현재 - InsertAlarmMail - timetable.conf (MailFetcher) 1분마다 실행(Notify) - MailFetcher 발송
+개발 - 딜레이없이 1초마다 바로 메일 발송을 할 수있도록 수정
+0) MailFetcher.start(); 지우기
+1) (ICAEventTrigger)참고 시간 config 설정 기본 1초
+2) AnalyzeEngineManager loadConfig() { 실행메소드 생성
+3) MailFetcherTrigger.java 생성
+
+
+
+[Mail Process]
+(web)DB입력 - Noti - MailFetcher / stat_flag ='0' 발송대상 메일리스트 가져오기, 없으면 return; - 상태 dao.updateFetchedMail(mailList); stat_flag ='1' MailFetcher(발송부분) - 메일큐에 넣기 workerManager.putQueue(maildata);  - 생성자 실행 - MailSender / 상태 dao.updateCompleteMail(m); stat_flag = #{stat_flag}
+
+ 

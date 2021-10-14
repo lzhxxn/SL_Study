@@ -1,0 +1,302 @@
+<?xml version="1.0"?>
+
+<configuration>
+	<default_language>ko_KR</default_language><!-- KOREA : ko_KR, ENGLISH : en_US ... -->
+	<report_html>false</report_html>
+	<multiple_login>true</multiple_login>
+	<multiple_manager_role>true</multiple_manager_role>
+	<user_ip_restrict>false</user_ip_restrict>
+	<login_retry_cnt>5</login_retry_cnt>
+	<login_retry_time>5</login_retry_time>
+	<complex_passwd>true</complex_passwd>
+	<password_update_cycle>90</password_update_cycle> <!-- Period, day -->
+	<login_lock>true</login_lock>
+	<password_cycle>true</password_cycle>
+	
+	<dashboard_refresh_sec>60</dashboard_refresh_sec>
+	<dashboard_min_refresh_sec>10</dashboard_min_refresh_sec>
+	<aisoar_dashboard_refresh_sec>20</aisoar_dashboard_refresh_sec>
+	<top5_sch_time>5</top5_sch_time>
+	<sms_sch_time>10</sms_sch_time>
+	<agent_chk_time>60</agent_chk_time>
+	<equip_chk_time>5</equip_chk_time>
+	<eps_sch_time>10080</eps_sch_time>
+	<use_board>true</use_board>
+	
+	<dashboard>
+		<component>
+			<my_log_search>
+				<max_req_row>1000</max_req_row><!-- Reqeust Rows/Minute, MAX : 1000 -->
+				<max_view_row>10000</max_view_row><!-- View Rows, MAX : 10000 -->
+				<max_stats_row>10000</max_stats_row><!-- Stats Rows -->
+				<max_period_min>60</max_period_min><!-- Period, MAX : 720(12hour) -->
+			</my_log_search>
+			<my_group_log_search>
+				<limit_period_min>120</limit_period_min>
+				<limit_row>10000</limit_row>
+				<limit_chart_row>10</limit_chart_row>
+			</my_group_log_search>
+			<my_log_search_event_ticker>
+				<limit_period_min>120</limit_period_min>
+				<limit_row>10000</limit_row>
+			</my_log_search_event_ticker>
+			<my_log_search_count>
+				<max_period_min>60</max_period_min><!-- Period, MAX : 720(12hour) -->
+			</my_log_search_count>
+			<performance_info>
+				<query>log_type:8</query>
+				<delay_min>-1</delay_min>
+			</performance_info>
+		</component>
+	</dashboard>
+	
+    <gen_dashboard>
+		<title>
+		     <default_icon_path>../store/upload/general_dashboard/default_icon/</default_icon_path>
+	         <default_icon_nm>eye.png</default_icon_nm>
+		</title>
+		<component>
+			<my_log_search_day_trend>
+				<max_legend_cnt>3</max_legend_cnt>
+			</my_log_search_day_trend>
+		</component>
+    </gen_dashboard>
+		
+	<log_search>
+		<search_client>
+			<connect_timeout>5</connect_timeout>
+		</search_client>
+		<search_time_type>AUTO</search_time_type>
+		<visible_length_check_fields>original_log</visible_length_check_fields>
+		<visible_length>500</visible_length>
+		<newline_string>/@/</newline_string>
+		<null_string>(null)</null_string>
+		<access_check_field>src_asset_group_cd,dstn_asset_group_cd,eqp_asset_group_cd</access_check_field>
+		<stat_limit_cnt>10000000</stat_limit_cnt>
+		<request_timeout>0</request_timeout>
+		<max_save_log_cnt>500000</max_save_log_cnt>
+		<req_rows_to_save>10000</req_rows_to_save>
+		<max_save_mylog_cnt>10000000</max_save_mylog_cnt>
+		<max_filter_min>10</max_filter_min>
+		<max_write_mylog_cnt>10000</max_write_mylog_cnt>
+		<relation_analysis_list>[{"relation_analysis_field":"log_type"\,"relation_analysis_name":"LBL.SYS.0001"\,"relation_analysis_value":"1"}\,{"relation_analysis_field":"log_type"\,"relation_analysis_name":"LBL.SYS.0002"\,"relation_analysis_value":"2|3"}\,{"relation_analysis_field":"log_type"\,"relation_analysis_name":"LBL.SYS.0003"\,"relation_analysis_value":"12"}\,{"relation_analysis_field":"log_type"\,"relation_analysis_name":"LBL.SYS.0004"\,"relation_analysis_value":"32"}\,{"relation_analysis_field":"log_type"\,"relation_analysis_name":"LBL.SYS.0005"\,"relation_analysis_value":"13"}\,{"relation_analysis_field":"log_code"\,"relation_analysis_name":"LBL.SYS.0006"\,"relation_analysis_value":"160102"}\,{"relation_analysis_field":"log_code"\,"relation_analysis_name":"LBL.SYS.0007"\,"relation_analysis_value":"160101"}]</relation_analysis_list>
+		<crypt_fields></crypt_fields>
+		<log_schedule>
+			<log_schedule_chk_time>10080</log_schedule_chk_time>
+			<log_schedule_max_save_log_cnt>100000000</log_schedule_max_save_log_cnt>
+		</log_schedule>
+	</log_search>
+	
+	<search_event>
+		<log_max_count>500000</log_max_count><!-- in 10 Minute -->
+		<system_link>false</system_link>
+		<max_tagging_expire_period>1440</max_tagging_expire_period> <!-- Minute, default : 1440 (1 Day) , max : 525600 (1 Year) -->
+	</search_event>
+	
+	<reputation>
+    	<reputation_log_max_count>500000</reputation_log_max_count>
+    </reputation>
+	
+	<top_statistics>
+		<reports>
+			<file_name>
+				<default>top_default</default>
+				<src_ip>top_ip</src_ip>
+				<dstn_ip>top_ip</dstn_ip>
+				<eqp_ip>top_ip</eqp_ip>
+			</file_name>
+			<path>/WEB-INF/reports/top_stat/</path>
+		</reports>
+	</top_statistics>
+
+	<search_statistics>
+		<group_field>src_ip</group_field>
+		<field_caption>
+			<asset_nm>LBL.SYS.0008</asset_nm>
+			<grade>LBL.SYS.0009</grade>
+			<department>LBL.SYS.0010</department>
+		</field_caption>
+		<reports>
+			<file_name>
+				<default>search_top_default</default>
+				<asset_nm>asset</asset_nm>
+				<total>total</total>
+				<time>time</time>
+			</file_name>
+			<path>/WEB-INF/reports/search_top/</path>
+		</reports>
+		<field_max_count>10</field_max_count>
+		<log_max_count>10000000</log_max_count><!-- in 60 Minute -->
+		<menu_max_count>10</menu_max_count>
+		<day_time>9-18</day_time>
+	</search_statistics>
+
+	<management>
+		<storage>
+			<default_path>
+				<root_path>/CloudESM/</root_path>
+				<src_path>data/processing/normalize/</src_path>
+				<index_hdd_path>data/storage/hdd/</index_hdd_path>
+				<index_ssd_path>data/storage/ssd/</index_ssd_path>
+				<move_path>store/backup/</move_path>
+			</default_path>
+		</storage>
+		<equipment>
+			<init_asset_value>
+				<group_cd>1</group_cd>
+				<eqp_type_cd>11</eqp_type_cd>
+			</init_asset_value>
+			<auto_parser_value>
+				<min_search_log_cnt>1000</min_search_log_cnt>
+				<analyze_log_cnt>100</analyze_log_cnt>
+			</auto_parser_value>
+		</equipment>
+	</management>
+	
+	<sysdata>
+		<user_tagging>
+			<max_derv_fld_cnt>5</max_derv_fld_cnt>
+		</user_tagging>
+	</sysdata>
+	
+	<restrict_in_collector>false</restrict_in_collector>
+
+	<parser_id_range>50000</parser_id_range>
+
+	<upload_path>../store/upload/</upload_path>
+
+	<policy_upload_path>/resources/upload/policy/</policy_upload_path>
+	<policy_file_ext>.bro</policy_file_ext>
+
+	<csv_charset>EUC-KR</csv_charset>
+
+	<asset_export_prefix>INF.SYS.0001</asset_export_prefix>
+
+	<incident_no_prefix>T</incident_no_prefix><!-- 사고번호문자(1자리) -->
+	<incident_row_data_key>eqp_dt,attack_nm,src_ip,src_port,dstn_ip,dstn_port,sensor_ip</incident_row_data_key>
+	<incident_row_data_key_seperator>|</incident_row_data_key_seperator>
+	<incident_row_data_value_seperator>,</incident_row_data_value_seperator>	
+	<incident_mail_info><!-- 사고관리 메일의 기본정보 설정 -->
+		<mail_addr></mail_addr><!-- 발신자 메일 주소 : 설정을 주석처리하거나 value값이 없으면 신고기관 정보의 전자우편 사용 -->
+		<phone_number></phone_number><!-- 발신자 전화번호 : 설정을 주석처리하거나 value값이 없으면 신고기관 정보의 휴대폰번호 사용 -->
+	</incident_mail_info>
+	<incident_mail_title></incident_mail_title>
+	<incident_mail_template><![CDATA[
+		<HTML><HEAD><TITLE>@@mail_title</TITLE></HEAD><BODY><PRE>@@mail_msg</PRE><PRE>@@mail_signature</PRE></BODY></HTML>
+	]]></incident_mail_template>
+	<incident_mail_signature></incident_mail_signature>
+	
+	<applyuser_mail_template><![CDATA[
+		<HTML><HEAD><TITLE>@@mail_title</TITLE></HEAD><BODY><PRE>@@mail_msg</PRE></BODY></HTML>
+	]]></applyuser_mail_template>
+	
+	<pwdcheck_mail_template><![CDATA[
+		<HTML><HEAD><TITLE>@@mail_title</TITLE></HEAD><BODY><PRE>@@mail_msg</PRE></BODY></HTML>
+	]]></pwdcheck_mail_template>
+	
+	<approveuser_mail_template><![CDATA[
+		<HTML><HEAD><TITLE>@@mail_title</TITLE></HEAD><BODY><PRE>@@mail_msg</PRE></BODY></HTML>
+	]]></approveuser_mail_template>
+	
+	<license>
+		<warning_quota>7</warning_quota>
+		<warning_percentage>90</warning_percentage>
+	</license>
+	
+	<pcap_file_code>14</pcap_file_code>
+	
+	<character_limit>8192</character_limit>
+	
+	<performance>
+		<query>log_type:8</query>
+		<delay_min>-1</delay_min>
+		<default_config_list>[{"size":"1"\,"name":"LBL.SYS.0011"\,"type":"MA"\,"fields":"memory_used_percent|memory_free_percent"}\,{"size":"1"\,"name":"CPU"\,"type":"MC"\,"fields":"total_cpu_idle|total_cpu_user|total_cpu_combined"}\,{"size":"2"\,"name":"LBL.SYS.0012"\,"type":"ML"\,"fields":"diskusage_use_percent_1|diskusage_use_percent_2|diskusage_use_percent_3"}]</default_config_list>
+	</performance>
+	<big_data>
+		<rChart>false</rChart>
+	</big_data>
+	
+	<nmap>
+		<ping>
+			<out_path>/CloudESM/app/www/store/scan/</out_path>
+			<out_name>result_ping.xml</out_name>
+		</ping>
+		<os>
+			<out_path>/CloudESM/app/www/store/scan/</out_path>
+			<out_name>result_os.xml</out_name>
+		</os>
+	</nmap>
+	
+	<report>
+		<init_cust_nm>eyeCloudXOAR</init_cust_nm>
+		<init_icon_img_nm>favicon-32.jpg</init_icon_img_nm>
+		<init_front_img_nm>start_background.png</init_front_img_nm>
+		<init_end_img_nm>end_background.png</init_end_img_nm>
+	</report>
+	
+	<soar>
+		<manual_ticket_key>uLb3p3FbOhTj92dGLWXvsA==</manual_ticket_key>
+		<analyzer_prtc>https</analyzer_prtc>
+		<analyzer_ip>192.168.1.109</analyzer_ip>
+		<analyzer_port>9130</analyzer_port>
+		<!-- 최대 25자(varchar25) -->
+		<!-- ex) SR20200410-T1-000001 -->
+		<ticket_id>
+			<prefix>SR</prefix><!-- 접두사-->
+			<dateformat>yyMMdd</dateformat><!-- 날짜형식 -->
+			<digit>6</digit><!-- 000001 부분 자리수 -->
+			<mid_prefix_ticket>T</mid_prefix_ticket><!-- 티켓 약어 -->
+			<mid_prefix_task>W</mid_prefix_task><!-- 업무 약어 -->
+		</ticket_id>
+		
+		<overlap>
+			<use_yn>true</use_yn>	<!-- 스케줄러 중복(티켓명)기능 사용유무 true:사용 false:미사용 -->
+			<duplicate_time_type>2</duplicate_time_type>	<!-- 1:Second 2:Minute 3:Hour -->
+			<duplicate_time>10</duplicate_time>		<!-- Second:0~60, Minute:0~60, Hour:0~24 -->
+		</overlap>
+		
+		<event><!-- 스케줄러 이벤트 조회건수 제한 -->
+			<search_limit>1000</search_limit>
+			<sms_limit>1000</sms_limit>
+			<black_limit>1000</black_limit>
+			<rel_limit>1000</rel_limit>
+		</event>
+		
+		<search><!-- 스케줄러 원본로그검색 설정 -->
+			<start_index>0</start_index>
+			<row_count>5000</row_count>
+			<group_count>100</group_count>
+			<sms_event_time_gap>60</sms_event_time_gap><!-- 로그검색 시작시간 설정(현재시간-gap) -->
+		</search>
+		
+		<geoip>
+			<path>/WEB-INF/conf/geoip/</path>
+			<name>GeoLite2-City.mmdb</name>
+		</geoip>
+		
+		<scheduler><!-- Alert 유형별 스케줄러 사용여부 true : 사용 false : 미사용 -->
+			<search_use_yn>false</search_use_yn>
+			<rel_use_yn>false</rel_use_yn>
+			<black_use_yn>false</black_use_yn>
+			<sms_use_yn>false</sms_use_yn>
+			
+			<risk_random_yn>false</risk_random_yn>
+			<event_level>0</event_level>
+		</scheduler>
+		
+		<component>
+			<splunk>
+				<url>https://10.1.32.115:8089</url>
+				<id>hdpark</id>
+				<pw>SecuLayer@2019</pw>
+			</splunk>
+		</component>
+		
+		<threat> <!-- 외부위협정보 쿼리 -->
+			<query>sc_vendor_name:IBM OR sc_vendor_name:SOMANSA OR sc_vendor_name:ESTSECURITY OR sc_vendor_name:AKAMAI</query>
+			<scheduler>
+				<time>300</time><!-- AI/SOAR대시보드 스케줄링 주기(임시 300초설정)-->
+			</scheduler>
+		</threat>
+	</soar>
+</configuration>
