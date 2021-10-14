@@ -1,0 +1,1355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seculayer.web.main.dao.MainDAO">
+
+	<select id="selectMymenus" resultType="map">
+		SELECT	menu_id_list
+		FROM	VW_MYMENUS
+		WHERE	user_id = #{user_id}
+	</select>
+	
+	<insert id="insertMymenus" parameterType="map">
+		INSERT INTO VW_MYMENUS (user_id, menu_id_list, reg_dt, mod_dt)
+		VALUES (#{user_id}, #{menu_id_list}, DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'), DATE_FORMAT(NOW(),'%Y%m%d%H%i%S'))
+		ON DUPLICATE KEY UPDATE
+			menu_id_list	= #{menu_id_list},
+			mod_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+	</insert>
+	
+
+	<!-- ########## Top5 START ########## -->
+	<select id="selectRawDataTop" resultType="map">
+		SELECT  IF(CAST(${section_name} AS CHAR)='','-',CAST(${section_name} AS CHAR)) AS label,
+		        SUM(cnt) AS value
+		FROM TOP_5MIN_${tbl_section_name}
+	<![CDATA[
+		WHERE eqp_dt >= #{start_time} AND eqp_dt < #{end_time}
+		AND ${section_name} != ""
+	]]>
+		<if test="log_cate_cd != null and log_cate_cd != ''">
+			AND  log_cate_cd = #{log_cate_cd}
+		</if>
+		<if test="group_cd != null and group_cd != ''">
+			AND  eqp_asset_group_cd = #{group_cd}
+		</if>	
+		GROUP BY label
+		ORDER BY value DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- ########## Netflow Top5 START ########## -->
+	<select id="selectMgrNetflowTop" resultType="map">
+		SELECT  top_name AS label,
+		        sum(pkt_size) AS value
+		FROM MGR_NETFLOW_TOP
+	<![CDATA[
+		WHERE recv_time >= #{start_time}
+	]]>
+		AND top_type = #{top_type}
+		GROUP BY top_name
+		ORDER BY value DESC
+		LIMIT 0, 5
+	</select>
+
+	<!-- ########## Event START ########## -->
+	<select id="selectSecurityEventForChart" resultType="map">
+		SELECT  CAST(A.ruleset_id AS CHAR) ruleset_id,
+				event_nm AS label,
+				count(*) AS value
+		FROM    MGR_SEC_EVENT A,
+				MGR_RULESET B
+		WHERE   A.ruleset_id = B.ruleset_id
+		AND		event_time >= #{start_time}
+		AND		A.reg_time BETWEEN B.open_time AND B.close_time
+		GROUP BY ruleset_id, event_nm
+		ORDER BY value DESC
+		LIMIT 0, 20
+	</select>
+
+	<select id="selectSecurityEventList" resultType="map">
+		SELECT  CAST(A.ruleset_id AS CHAR) ruleset_id,
+				(
+					SELECT	code_name
+					FROM	COM_CODE
+					WHERE	code_type = 'CS0001'
+					AND		code_id = B.log_type_cd
+				) AS log_type,
+				log_type_cd,
+				event_nm,
+				event_level,
+				cnt,
+				event_time,
+				sdt,
+				ddt,
+				(	SELECT GROUP_CONCAT(signature SEPARATOR '||') FROM CloudESM.MGR_RULESET_SIG
+					WHERE ruleset_id = A.ruleset_id AND A.reg_time BETWEEN open_time AND close_time) signatures
+		FROM    MGR_SEC_EVENT A,
+				MGR_RULESET B
+		WHERE   A.ruleset_id = B.ruleset_id
+		AND		A.reg_time BETWEEN B.open_time AND B.close_time
+		<if test="log_type_cd != null and log_type_cd != ''">
+			AND log_type_cd = #{log_type_cd}
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND event_level = #{event_level}
+		</if>
+		ORDER BY event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectSecurityEvent2List" resultType="map">
+		SELECT  CAST(A.ruleset_id AS CHAR) ruleset_id,zz
+				(
+					SELECT	code_name
+					FROM	COM_CODE
+					WHERE	code_type = 'CS0001'
+					AND		code_id = B.log_type_cd
+				) AS log_type,
+				CAST(A.asset_id AS CHAR) asset_id,
+				asset_nm,
+				IF(sip = eip, sip, CONCAT(sip, "-", eip))	asset_ip,
+				log_type_cd,
+				event_nm,
+				event_level,
+				cnt,
+				event_time,
+				sdt,
+				ddt,
+				search_query
+		FROM    MGR_SEC_EVENT2 A
+		INNER JOIN MGR_RULESET2 B USING(ruleset_id)
+		LEFT OUTER JOIN MGR_ASSET C
+			ON	A.asset_id = C.asset_id
+			AND	A.reg_time BETWEEN C.open_time AND C.close_time
+		WHERE A.reg_time BETWEEN B.open_time AND B.close_time
+		<if test="cust_ids != null and cust_ids.length > 0 ">
+			AND C.group_cd IN(
+			<foreach item="cust_id" collection="cust_ids" separator=",">
+				#{cust_id}
+			</foreach>
+			)
+		</if>
+		<if test="log_type_cd != null and log_type_cd != ''">
+			AND log_type_cd = #{log_type_cd}
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND event_level = #{event_level}
+		</if>
+		ORDER BY event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectEpsSecurityEventTotal" resultType="map">
+		SELECT	DUMMY.tc_type,
+				IFNULL(SUM(IF(event_cate_cd = '1', 1, 0)),0)	cate1_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '2', 1, 0)),0)	cate2_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '3', 1, 0)),0)	cate3_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '4', 1, 0)),0)	cate4_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '5', 1, 0)),0)	cate5_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '6', 1, 0)),0)	cate6_cnt
+		FROM	(
+			SELECT 1 tc_type
+			UNION
+			SELECT 2 tc_type
+		) DUMMY
+		LEFT OUTER JOIN EPS_SEC_EVENT A 
+			ON	DUMMY.tc_type = A.tc_type
+			AND	event_time >= #{start_time}
+		GROUP BY DUMMY.tc_type
+	</select>
+	
+	<select id="selectSmsEventList" resultType="map">
+		SELECT	A.sms_type,
+				(
+					SELECT	code_name
+					FROM	COM_CODE
+					WHERE	code_type = 'CS0003'
+					AND		code_id = A.sms_type
+				) AS sms_type_nm,
+				A.eqp_ip,
+				eqp_nm,
+				B.eqp_type_cd,
+				eqp_time,
+				curr_val,
+				limit_val,
+				event_level
+		FROM    MGR_SMS_EVENT A,
+				MGR_EQP B
+		WHERE	A.eqp_ip = B.eqp_ip
+		AND		A.eqp_time > DATE_FORMAT(NOW() + INTERVAL -1 DAY, '%Y%m%d%H%i%')
+		<if test="cust_ids != null and cust_ids.length > 0 ">
+			AND A.eqp_ip IN (
+				SELECT	EQP.eqp_ip
+				FROM	MGR_EQP EQP
+				WHERE	EQP.group_cd IN(
+				<foreach item="cust_id" collection="cust_ids" separator=",">
+					#{cust_id}
+				</foreach>
+				)
+			)
+		</if>
+		<if test="sms_type != null and sms_type != ''">
+			AND sms_type = #{sms_type}
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND event_level = #{event_level}
+		</if>
+		ORDER BY eqp_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectBlacklistEventList" resultType="map">
+		SELECT	A.blacklist_ip,
+				event_time,
+				ip_type,
+				(SELECT code_name FROM COM_CODE C WHERE C.code_type = 'CS0021' AND C.code_id = type) as type_nm,
+				nation,
+				domain,
+				cnt
+		FROM    MGR_BLACKLIST_EVENT A
+		LEFT OUTER JOIN MGR_BLACKLIST B ON A.blacklist_ip = B.blacklist_ip	 
+		<where>
+		<if test="s_type != null and s_type != ''">
+				type = #{s_type}
+		</if>
+		<if test="start_time != null and start_time != ''">
+		<![CDATA[
+				AND event_time >= #{start_time} AND event_time < #{end_time}
+		]]>
+		</if>
+		</where>	
+		ORDER BY event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="selectThreatAllowEventList" resultType="map">
+		SELECT	event_time,
+				event_nm,
+				src_ip,
+				sdt,
+				ddt,
+				allow_yn,
+				proc_stat
+		FROM    MGR_ALLOW_EVENT
+		WHERE	allow_yn = 'Y' 
+		ORDER BY event_time DESC
+		LIMIT 0, 5
+	</select>
+
+	<select id="selectCorrelEventList" resultType="map">
+		SELECT  CAST(A.ruleset_id AS CHAR) ruleset_id,
+				B.event_nm,
+				CAST(A.asset_id AS CHAR) asset_id,
+				ASS.asset_nm,
+				ASS.sip,
+				ASS.eip,
+				A.event_time,
+				A.sdt,
+				A.ddt,
+				B.trigger_id,
+				C.event_nm				trg_event_nm,
+				C.search_query			trg_search_query,
+				A.sec_event_cnt,
+				(	SELECT GROUP_CONCAT(signature SEPARATOR '||') FROM MGR_RULESET_SIG
+					WHERE ruleset_id = D.ruleset_id AND open_time = D.open_time) AS signatures,
+				A.ext_event_cnt,
+				E.search_query			ext_search_query,
+				A.sms_event_level,
+				F.eqp_type_cd,
+				A.blackip_cnt
+		FROM    MGR_COREL_EVENT A
+		INNER JOIN MGR_COREL_RULESET B
+			ON	A.ruleset_id = B.ruleset_id
+			AND	A.open_time = B.open_time
+		LEFT OUTER JOIN MGR_RULESET2 C
+			ON	B.trigger_id = C.ruleset_id
+			AND	A.reg_time BETWEEN C.open_time AND C.close_time
+		LEFT OUTER JOIN MGR_ASSET ASS
+			ON	A.asset_id = ASS.asset_id
+			AND	ASS.close_time = '99991231235959'
+		LEFT OUTER JOIN MGR_RULESET D
+			ON	B.sec_ruleset_id = D.ruleset_id
+			AND	A.reg_time BETWEEN D.open_time AND D.close_time
+		LEFT OUTER JOIN MGR_RULESET2 E
+			ON	B.ext_ruleset_id = E.ruleset_id
+			AND	A.reg_time BETWEEN E.open_time AND E.close_time
+		LEFT OUTER JOIN MGR_EQP F
+			ON	ASS.sip = F.eqp_ip
+		<if test="cust_ids != null and cust_ids.length > 0 ">
+		LEFT OUTER JOIN MGR_ASSET ASS2
+			ON	A.src_ip = ASS2.sip
+			AND ASS2.sip = ASS2.eip
+			AND	A.reg_time BETWEEN ASS2.open_time AND ASS2.close_time
+		LEFT OUTER JOIN MGR_ASSET ASS3
+			ON	A.dstn_ip = ASS3.sip
+			AND ASS3.sip = ASS3.eip
+			AND	A.reg_time BETWEEN ASS3.open_time AND ASS3.close_time
+		</if>
+		<where>	
+			<if test="cust_ids != null and cust_ids.length > 0 ">
+			AND
+			(
+				ASS2.group_cd IN (
+				<foreach item="cust_id" collection="cust_ids" separator=",">
+					#{cust_id}
+				</foreach>
+				)
+				OR
+				ASS3.group_cd IN (
+				<foreach item="cust_id" collection="cust_ids" separator=",">
+					#{cust_id}
+				</foreach>
+				)
+				OR ASS.group_cd IN (
+				<foreach item="cust_id" collection="cust_ids" separator=",">
+					#{cust_id}
+				</foreach>
+				)
+			)
+			</if>
+		</where>
+		ORDER BY A.event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="selectRealtimeEventList" resultType="map">
+		SELECT 	event_time,
+				CAST(A.ruleset_id AS CHAR) ruleset_id,
+				B.event_nm,
+				B.event_grp_cd,
+				(SELECT code_name FROM COM_CODE WHERE code_type = 'CS0051' AND code_id = B.event_grp_cd) AS event_grp_cd_nm,
+				B.event_level,
+				(SELECT code_name FROM COM_CODE WHERE code_type = 'CS0005' AND code_id = B.event_level) AS event_level_nm,
+				B.field_nm,
+				B.detect_type,
+				B.signature_nm,
+				A.event_seq,
+				B.description,
+				A.cnt,
+				A.reg_time
+		FROM MGR_REALTIME_EVENT A, MGR_REALTIME_RULESET B
+		WHERE A.ruleset_id = B.ruleset_id
+		AND A.reg_time BETWEEN B.open_time AND B.close_time
+		<if test="ruleset_id != null and ruleset_id != ''">
+			AND A.ruleset_id IN (
+			<foreach item="ruleset_id" collection="ruleset_id_list" separator=",">
+				#{ruleset_id}
+			</foreach>
+			)
+		</if>
+		<if test="event_grp_cd != null and event_grp_cd != ''">
+			AND event_grp_cd = #{event_grp_cd}
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND event_level = #{event_level}
+		</if>	
+		<if test="event_seq != null and event_seq != ''">
+			<![CDATA[
+			AND event_seq > #{event_seq}
+			]]>
+		</if>
+		<if test="event_time != null and event_time != ''">
+			<![CDATA[
+			AND event_time > #{event_time}
+			]]>
+		</if>
+		ORDER BY event_seq DESC
+	</select>
+
+	<select id="selectRealtimeEventNmList" resultType="map">
+		SELECT CAST(ruleset_id AS CHAR) ruleset_id,
+				  event_nm
+		FROM MGR_REALTIME_RULESET
+		WHERE 1=1 
+		AND close_time ='99991231235959'
+	</select>
+	
+	<select id="selectThreatDetectEventList" resultType="map">
+		SELECT	log_key,  
+				event_time,
+				event_nm,
+				event_level,
+				eqp_dt,
+				src_ip,
+				dstn_ip,
+				dstn_port,
+				threat_grp_cd,
+				B.system_cd,
+				inst_cd
+		FROM    MGR_THREAT_EVENT A, MGR_THREAT_RULESET B
+		<![CDATA[
+		WHERE A.ruleset_id = B.ruleset_id	
+			AND A.reg_time BETWEEN B.open_time AND B.close_time
+		]]>		
+		<if test="cust_ids != null and cust_ids.length > 0 ">
+			AND inst_cd IN(
+			<foreach item="cust_id" collection="cust_ids" separator=",">
+				#{cust_id}
+			</foreach>
+			)
+		</if>
+		<if test="system_cd != null and system_cd != ''">
+			AND B.system_cd = #{system_cd}
+		</if>
+		<if test="threat_grp_cd != null and threat_grp_cd != ''">
+			AND threat_grp_cd = #{threat_grp_cd}
+		</if>
+		ORDER BY A.event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	<select id="selectThreatdetectFlag" resultType="map">
+		SELECT * FROM COM_CODE
+		 WHERE code_type = #{code_type}
+		 GROUP BY flag1
+	</select>
+	<select id="selectThreatDetectTotalEventList" resultType="map">
+		SELECT	IFNULL(SUM(IF(event_cate_cd = '1', 1, 0)),0)	cate1_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '2', 1, 0)),0)	cate2_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '3', 1, 0)),0)	cate3_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '4', 1, 0)),0)	cate4_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '5', 1, 0)),0)	cate5_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '6', 1, 0)),0)	cate6_cnt,
+				COUNT(*) tot_cnt
+		FROM	MGR_THREAT_EVENT
+		<if test="start_time != null and start_time != ''">
+		<![CDATA[
+			WHERE event_time >= #{start_time} AND event_time < #{end_time}
+		]]>
+		</if>		
+	</select>
+	<select id="selectThreatdetectEventRisk" resultType="map">
+		SELECT	
+				IFNULL(SUM(IF(event_cate_cd = '1', 1, 0)),0)	cate1_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '2', 1, 0)),0)	cate2_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '3', 1, 0)),0)	cate3_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '4', 1, 0)),0)	cate4_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '5', 1, 0)),0)	cate5_cnt,
+				IFNULL(SUM(IF(event_cate_cd = '6', 1, 0)),0)	cate6_cnt
+		FROM MGR_THREAT_EVENT
+		<if test="start_time != null and start_time != ''">
+		<![CDATA[
+			WHERE event_time >= #{start_time} AND event_time < #{end_time}
+		]]>
+		</if>				
+		GROUP BY src_ip
+	</select>
+	
+	<select id="selectFaultEventList" resultType="map">
+		SELECT	CAST(A.ruleset_id AS CHAR) ruleset_id,
+				event_time,
+				B.event_nm,
+				inst_cd	,
+				eqp_ip,				
+				cnt,
+				eqp_dt
+		FROM    MGR_FAULT_EVENT A, MGR_FAULT_RULESET B
+		<![CDATA[
+		WHERE A.ruleset_id = B.ruleset_id	
+		  AND A.reg_time BETWEEN B.open_time AND B.close_time		 
+		]]>
+		<if test="cust_ids != null and cust_ids.length > 0 ">
+			AND A.inst_cd IN (
+			<foreach item="cust_id" collection="cust_ids" separator=",">
+				#{cust_id}
+			</foreach>
+			)
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND B.event_level = #{event_level}
+		</if>
+		<if test="event_grp_cd != null and event_grp_cd != ''">
+			AND B.event_grp_cd = #{event_grp_cd}
+		</if>
+		ORDER BY A.event_time DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- ########## Event END ########## -->
+
+
+	<!-- ########## System Status Info START ########## -->
+	<select id="selectSystemStatus" resultType="map">
+		SELECT	A.cpu,
+				B.memory,
+				C.read_bytes,
+				C.write_bytes
+		FROM (SELECT	combined cpu
+				FROM    SMS_CPU
+				WHERE   eqp_ip = FN_IP_STD(#{eqp_ip})
+				ORDER BY eqp_time DESC
+				LIMIT 0, 1
+			) A,
+			(	SELECT	used_percent memory
+				FROM    SMS_MEMORY
+				WHERE   eqp_ip = FN_IP_STD(#{eqp_ip})
+				ORDER BY eqp_time DESC
+				LIMIT 0, 1
+			) B,
+ 			(	SELECT	read_bytes,
+ 						write_bytes
+				FROM	SMS_DISK
+				WHERE   eqp_ip = FN_IP_STD(#{eqp_ip})
+				ORDER BY eqp_time DESC
+				LIMIT 0, 1
+			) C
+	</select>
+	
+	<select id="selectNetwrokForChart" resultType="map">
+	<![CDATA[
+		SELECT	concat(substring(eqp_time,9,2),':',substring(eqp_time,11,2)) as label,
+				rx_bytes AS value,
+				tx_bytes AS value2
+		FROM   SMS_NETWORK
+		WHERE  eqp_ip = FN_IP_STD(#{eqp_ip})
+		AND    eqp_time >= #{start_time}
+		ORDER BY eqp_time
+	]]>
+	</select>
+	<!-- ########## System Status Info END ########## -->
+
+	<!-- ########## Log Collect Status Info END ########## -->
+	<select id="selectCollectStatus" resultType="map">
+		SELECT  ${period} 				AS time_cnt,
+		        count(distinct eqp_ip)	AS eqp_cnt,
+		        IFNULL(sum(count),0)	AS sum_cnt,
+		        IFNULL(max(count),1)*1.2 AS chart_max_cnt,
+		        IFNULL(sum(length),0)	AS sum_len
+		FROM	SUM_COLLECT_INFO_1MIN
+	<![CDATA[
+		WHERE	recv_time >= #{start_time} AND recv_time < DATE_FORMAT(DATE_ADD('${start_time}00', INTERVAL #{period} MINUTE), '%Y%m%d%H%i')
+	]]>
+		<if test="agent_ip != null and agent_ip != ''">
+			AND	agent_ip = FN_IP_STD(#{agent_ip})
+		</if>
+		<if test="eqp_ip != null and eqp_ip != ''">
+			AND	eqp_ip = FN_IP_STD(#{eqp_ip})
+		</if>
+	</select>
+	
+	<select id="selectCollectYesterday" resultType="map">
+		SELECT  IFNULL(sum(count),0) sum_cnt,
+				IFNULL(sum(length), 0) sum_len
+		FROM	SUM_COLLECT_INFO_1MIN
+		WHERE recv_time between ${yst_dt}0000 and ${yst_dt}2359 
+		<if test="agent_ip != null and agent_ip != ''">
+			AND	agent_ip = FN_IP_STD(#{agent_ip})
+		</if>
+		<if test="eqp_ip != null and eqp_ip != ''">
+			AND	eqp_ip = FN_IP_STD(#{eqp_ip})
+		</if>
+	</select>
+
+	<select id="selectCollectForChart" resultType="map">
+		SELECT
+		<![CDATA[
+				DATE_FORMAT(STR_TO_DATE(dummy.recv_time, '%Y%m%d%H%i%s'), '%d-%H:%i') AS label,
+				IFNULL(SUM(count),0) AS value
+		]]>
+		FROM (
+		<![CDATA[
+			SELECT 	DATE_FORMAT(DATE_ADD('${start_time}00', INTERVAL val-1 MINUTE), '%Y%m%d%H%i') AS recv_time
+			FROM	TEMP_DUMMY
+			WHERE 	val <= #{period}
+		]]>
+		)	dummy
+		LEFT OUTER JOIN (
+			SELECT 	eqp_ip,
+					SCI.recv_time,
+					SUM(count) count
+			FROM 	SUM_COLLECT_INFO_1MIN SCI
+		<![CDATA[
+			WHERE	recv_time >= #{start_time} AND recv_time < DATE_FORMAT(DATE_ADD('${start_time}00', INTERVAL #{period} MINUTE), '%Y%m%d%H%i')
+		]]>
+			<if test="eqp_ip != null and eqp_ip != ''">
+				AND eqp_ip = FN_IP_STD(#{eqp_ip})
+			</if>
+			<if test="log_cate_cd != null and log_cate_cd != ''">
+				AND	log_cate_cd = #{log_cate_cd}
+			</if>
+			GROUP BY recv_time
+		) info
+		ON dummy.recv_time = info.recv_time
+		GROUP BY dummy.recv_time
+	</select>
+	<!-- ########## Log Collect Status Info END ########## -->
+
+	<select id="selectAgentLockForChart" resultType="map">
+		SELECT	COUNT(A.agent_ip) agent_cnt,
+				SUM(CASE WHEN C.eqp_ip IS NOT NULL AND cnt > 0 THEN 1 ELSE 0 END) succ_cnt,
+				SUM(CASE WHEN cnt IS NULL OR cnt = 0 THEN 1 ELSE 0 END) lock_cnt,
+				GROUP_CONCAT(CASE WHEN cnt IS NULL OR cnt = 0 THEN A.agent_ip ELSE NULL END) lock_agent_ip
+		FROM MGR_AGENT A
+		LEFT OUTER JOIN (
+			SELECT	eqp_ip, SUM(COUNT) cnt
+			FROM SUM_COLLECT_INFO_1MIN
+			WHERE recv_time >= #{start_time}
+			GROUP BY eqp_ip
+		) C
+			ON A.agent_ip = C.eqp_ip
+		<if test="restrict_collector_list != null and !restrict_collector_list.empty">
+			<foreach item="data" collection="restrict_collector_list" open="WHERE collector_id IN (" separator="," close=")">
+				#{data.collector_id}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="selectEqpLockForChart" resultType="map">
+		SELECT  COUNT(*) eqp_cnt,
+				IFNULL(SUM(CASE WHEN stat_chk_type IS NULL OR stat_chk_type = '-1' OR (stat_result = 1 AND stat_chk_time >= #{start_time}) THEN 1 ELSE 0 END), 0) succ_cnt, 
+				IFNULL(SUM(CASE WHEN stat_chk_type IS NULL OR stat_chk_type = '-1' OR (stat_result = 1 AND stat_chk_time >= #{start_time}) THEN 0 ELSE 1 END), 0) lock_cnt,
+			<![CDATA[
+				IFNULL(SUM(CASE WHEN TIMESTAMPDIFF(MINUTE,STR_TO_DATE(D.recv_time, '%Y%m%d%H%i%s'),NOW()) <= collect_allow_time THEN 1 ELSE 0 END), 0) collect_succ_cnt, 
+				IFNULL(SUM(CASE WHEN TIMESTAMPDIFF(MINUTE,STR_TO_DATE(D.recv_time, '%Y%m%d%H%i%s'),NOW()) <= collect_allow_time THEN 0 ELSE 1 END), 0) collect_lock_cnt		
+			]]>	
+		
+		FROM	MGR_EQP A
+		<if test="restrict_collector_list != null and !restrict_collector_list.empty">
+		INNER JOIN MGR_AGENT AG
+		  ON	A.agent_id = AG.agent_id
+			<foreach item="data" collection="restrict_collector_list" open="AND AG.collector_id IN (" separator="," close=")">
+				#{data.collector_id}
+			</foreach>
+		</if>		
+		LEFT OUTER JOIN MGR_EQP_STATUS B
+			ON	A.eqp_id = B.eqp_id
+		LEFT OUTER JOIN MGR_EQP_COLLECT_TIME D USING(eqp_ip)
+		WHERE 1=1
+		<if test="group_cd != null and group_cd != ''">
+			AND A.group_cd IN (
+			<foreach item="group_cd" collection="group_cd_list" separator=",">
+				#{group_cd}
+			</foreach>
+			)
+		</if>
+
+	</select>
+	<!-- ########## Collector Info END ########## -->
+
+	<!-- ########## Alarm Manager START ########## -->
+	<select id="selectAlarmMng" resultType="map">
+		SELECT mail_use_yn,
+			   sms_use_yn,
+			   snd_use_yn,
+			   kakao_use_yn
+		FROM ALARM_MNG
+	</select>
+	
+	<select id="selectAlarmReceiver" resultType="map">
+		SELECT user_id
+		FROM ALARM_RECEIVER
+	</select>
+	<!-- ########## Alarm Manager END ########## -->
+	
+	<!-- ########## User Cust START ########## -->
+	<select id="selectComUserCustList" resultType="map">
+		SELECT user_id,
+			   cust_id
+		FROM COM_USER_CUST
+	</select>	
+	<!-- ########## User Cust END ########## -->
+	
+	<!-- ########## Alarm History START ########## -->
+	<select id="selectAlarmHistoryList" resultType="map">
+		SELECT
+			event_time,
+			alarm_cd,
+			alarm_nm,
+			status_nm,
+ 			CASE alarm_cd WHEN '3'  THEN '/event/search_event_list.html'
+				      	  WHEN '4'  THEN '/event/blacklist_event_list.html'
+				      	  WHEN '5'  THEN '/event/sms_event_list.html'
+				      	  WHEN '6'  THEN '/system/asset_list.html'
+				     	  WHEN '7'  THEN '/management/agent_list.html'
+				      	  WHEN '11' THEN '/event2/rel_event_list.html'
+									ELSE '' 
+			END  AS info_page,
+			CASE WHEN alarm_cd IN ('3','4','5','11') THEN 'Y' 
+													 ELSE 'N' END AS date_param,
+			sdt,
+			ddt
+		FROM (
+			SELECT
+			    A.event_time,
+			    A.alarm_cd,
+			    (
+			    SELECT
+			        code_name
+			    FROM
+			        COM_CODE
+			    WHERE
+			        code_type = 'CS0018'
+			    AND code_id = A.alarm_cd
+			    ) AS alarm_nm,
+			    (
+			    SELECT
+			        code_name
+			    FROM
+			        COM_CODE
+			    WHERE
+			        code_type = CASE WHEN A.alarm_cd = '1' THEN 'CS0019' ELSE 'CS0005' END
+			    AND code_id = A.status
+			    ) AS status_nm,
+			    A.sdt,
+			    A.ddt
+			FROM
+			    ALARM_HISTORY A
+			WHERE LEFT(A.event_time,12) = DATE_FORMAT(NOW(),'%Y%m%d%H%i')
+		) A
+	</select>
+	
+	<select id="selectTop3AlarmHistoryList" resultType="map">
+		SELECT	event_time,
+				alarm_cd,
+				alarm_nm,
+				status_nm
+		FROM (
+			SELECT	DATE_FORMAT(A.event_time,'%Y%m%d%H%i') event_time,
+				    A.alarm_cd,
+				    (
+				     SELECT code_name
+				     FROM COM_CODE
+				     WHERE code_type = 'CS0018'
+				     AND code_id = A.alarm_cd
+				    ) AS alarm_nm,
+				    (
+				     SELECT code_name
+				     FROM COM_CODE
+				     WHERE code_type = CASE WHEN A.alarm_cd = '1' THEN 'CS0019' ELSE 'CS0005' END
+				     AND code_id = A.status
+				    ) AS status_nm
+			FROM	ALARM_HISTORY A
+			WHERE 	event_time >= DATE_FORMAT(NOW(),'%Y%m%d')
+			AND DATE_FORMAT(A.event_time,'%Y%m%d%H%i') IN (
+				SELECT event_time 
+				FROM (
+					SELECT event_time FROM (
+						SELECT DATE_FORMAT(event_time,'%Y%m%d%H%i') AS event_time 
+						FROM ALARM_HISTORY
+						WHERE event_time >= DATE_FORMAT(NOW(),'%Y%m%d')
+					) C
+					GROUP BY C.event_time
+					ORDER BY event_time DESC
+					LIMIT 3
+				) B
+			 )
+		 ) TBL
+		 ORDER BY TBL.event_time DESC
+	</select>
+	<!-- ########## Alarm History END ########## -->
+	
+	<!-- ##########  Event Alarm List START ########## -->
+	<select id="selectEventAlarmList" resultType="map">
+		SELECT B.event_nm,
+		       B.event_level,
+		       C.user_id,
+		       (SELECT
+		        	code_name 
+		        FROM 
+		        	COM_CODE
+		        WHERE
+		        	code_type = 'CS0005'
+		        AND code_id = B.event_level
+		        ) AS level_nm,
+		       A.event_time,
+		       A.reg_time,
+		       IFNULL(A.group_cd,'') group_cd,
+		       B.event_cate_cd,
+		       B.event_level,
+		       B.dashboard_yn,
+		       A.handling_type_cd
+		FROM   MGR_SEARCH_EVENT A
+		INNER JOIN MGR_SEARCH_RULESET B 
+		  ON A.ruleset_id = B.ruleset_id
+		INNER JOIN MGR_SEARCH_ALARM_RECEIVER C
+		  ON B.ruleset_id = C.ruleset_id
+		WHERE  A.reg_time >= DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -10 SECOND), '%Y%m%d%H%i%S')
+		AND    <![CDATA[ A.reg_time < DATE_FORMAT(NOW(), '%Y%m%d%H%i%S') ]]>
+		AND    B.event_level >= (SELECT IFNULL(alarm_cond,999) FROM ALARM_CONDITION WHERE alarm_cd = 3)
+		AND    B.close_time = '99991231235959'
+		ORDER BY A.event_time DESC;
+	</select>
+	<!-- ########## Event Alarm List END ########## -->	
+	
+	<!-- ########## Login Menu START ##########-->
+	<update id="updateLoginMenuId" parameterType="map">
+		UPDATE COM_USER SET
+			<if test="passwd != null and passwd != ''">
+				passwd = #{passwd},
+			</if>
+			login_menu_id = #{login_menu_id},
+			alarm_mode = #{alarm_mode},
+			proc_id = #{proc_id},
+		    proc_ip = FN_IP_STD(#{proc_ip}),
+		    proc_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S')
+		WHERE
+			user_id = #{p_user_id}
+	</update>
+	
+	<select id="selectLoginMenu" resultType="map">
+		SELECT code_id,
+				flag1 ,
+				flag2 
+		FROM COM_CODE 
+		WHERE code_type='CS0044' 
+		AND code_id= #{login_menu_id};
+	</select>
+	<!-- ########## Login Menu END ########## -->
+	
+	<!-- ########## Search Top START ########## -->
+	<select id="selectTopData1HCount" resultType="long">
+		SELECT  IFNULL(sum(total), 0) AS total
+		FROM	TOP_DATA_1H
+	<![CDATA[
+		WHERE eqp_dt >= #{start_time} and eqp_dt < #{end_time}
+	]]>
+		AND top_code = #{top_code}
+		AND field_nm = #{field_nm}
+	</select>
+	
+	<select id="selectTopData1HList" resultType="map">
+		SELECT  field_value as label,
+				sum(total) AS value
+		FROM	TOP_DATA_1H
+	<![CDATA[
+		WHERE eqp_dt >= #{start_time} and eqp_dt < #{end_time}
+	]]>
+		AND top_code = #{top_code}
+		AND field_nm = #{field_nm}
+		GROUP BY field_value
+		ORDER BY value DESC
+		<if test="rows != 0">
+			LIMIT 0, ${rows}
+		</if>
+	</select>
+	<!-- ########## Search Top END ########## -->
+
+	<!-- ########## CplxEvent START ########## -->
+	<select id="selectCplxRuleSetList" resultType="map">
+		SELECT	CAST(ruleset_id AS CHAR) ruleset_id,
+				open_time,
+				close_time,
+				event_nm,
+				event_cate_cd,
+				event_level,
+				time_type,
+				times,
+				description,
+				update_dt,
+				use_yn,
+				proc_id,
+				proc_ip,
+				proc_dt
+		FROM 	MGR_CPLX_RULESET
+		WHERE	close_time = '99991231235959'
+		ORDER BY ruleset_id DESC
+	</select>
+	
+	<select id="selectCplxEventList" resultType="map">
+		SELECT	CAST(A.ruleset_id AS CHAR) ruleset_id,
+				A.event_time,
+				A.open_time,
+				A.field_val,
+				A.event_seq,
+				A.reg_time,
+				B.close_time,
+				B.event_nm,
+				B.event_cate_cd,
+				B.event_level,
+				B.time_type,
+				B.times,
+				B.description,
+				B.update_dt,
+				B.use_yn,
+				1 AS cnt
+		FROM    MGR_CPLX_EVENT A
+		INNER JOIN MGR_CPLX_RULESET B
+			ON	A.ruleset_id = B.ruleset_id
+			AND	A.reg_time BETWEEN B.open_time AND B.close_time
+		<where>
+		<if test="event_seq != null and event_seq != ''">
+		<![CDATA[
+			AND A.event_seq > #{event_seq}
+		]]>
+		</if>
+		<if test="event_time != null and event_time != ''">
+		<![CDATA[
+			AND A.event_time > #{event_time}
+		]]>
+		</if>
+		<if test="ruleset_id != null and ruleset_id != ''">
+			AND CAST(A.ruleset_id AS CHAR) IN (
+			<foreach item="ruleset_id" collection="ruleset_id_list" separator=",">
+				#{ruleset_id}
+			</foreach>
+			)
+		</if>
+		<if test="event_cate_cd != null and event_cate_cd != ''">
+			AND B.event_cate_cd = #{event_cate_cd}
+		</if>
+		<if test="event_level != null and event_level != ''">
+			AND B.event_level = #{event_level}
+		</if>
+		<if test="field_val != null and field_val != ''">
+			AND A.field_val LIKE CONCAT('%',#{field_val},'%')
+		</if>
+		</where>
+		ORDER BY A.event_seq DESC
+	</select>
+	<!-- ########## CplxEvent Top END ########## -->
+		
+	<!-- ########## IncidentInfo START ########## -->
+	<select id="selectIncidentInfotList" resultType="map">
+		SELECT	CAST(inci_no AS CHAR) inci_no,
+				inci_work_no,
+				inci_prcs_stat,
+				inci_dt,
+				inci_title,
+				inci_inst_cd,
+				inci_type_cd,
+				inci_user_id
+		FROM    INCI_LEDGER
+		<where>   
+		<if test="start_time != null and start_time != ''">
+		<![CDATA[
+			inci_dt >= #{start_time} AND inci_dt < #{end_time}
+		]]>
+		</if>
+		<if test="inci_type_cd != null and inci_type_cd !=''">
+			AND inci_type_cd = #{inci_type_cd}
+		</if>
+		<if test="inci_prcs_stat != null and inci_prcs_stat != ''">
+			AND inci_prcs_stat = #{inci_prcs_stat}
+		</if>
+		</where>
+		ORDER BY inci_dt DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>	
+	</select>
+	
+	<select id="selectIncidentStatustList" resultType="java.util.LinkedHashMap">
+		SELECT
+			inci_prcs_stat,
+		<foreach item="cd" collection="inciTypeCodesKeySet" separator=",">				
+			SUM(CASE WHEN inci_type_cd = #{cd} THEN 1 ELSE 0 END) 's_${cd}'
+		</foreach>
+		FROM (
+			SELECT 
+				DUM_STAT.inci_prcs_stat,
+				IFNULL(inci_type_cd,0)  AS inci_type_cd
+			FROM (
+				SELECT code_id AS inci_prcs_stat
+				FROM COM_CODE
+				WHERE CODE_TYPE ='CS0023'
+			) DUM_STAT
+			LEFT OUTER JOIN(
+				SELECT inci_prcs_stat, inci_type_cd
+				FROM INCI_LEDGER
+				<where>
+					<if test="start_time != null and start_time != ''">
+					<![CDATA[
+						inci_dt >= #{start_time} AND inci_dt < #{end_time}
+					]]>
+					</if>
+				</where>
+			) LED
+			ON DUM_STAT.inci_prcs_stat = LED.inci_prcs_stat
+		) TOT
+		GROUP BY inci_prcs_stat
+		ORDER BY inci_prcs_stat
+	</select>
+
+	<select id="selectIncidentStatustExport" resultType="java.util.LinkedHashMap">
+		SELECT
+			inci_prcs_stat AS inci_prcs_stat_code,
+			(SELECT code_name FROM COM_CODE WHERE code_type="CS0023" AND code_id = inci_prcs_stat) AS inci_prcs_stat,
+		<foreach item="cd" collection="inciTypeCodesKeySet" separator=",">				
+			SUM(CASE WHEN inci_type_cd = #{cd} THEN 1 ELSE 0 END) 's_${cd}'
+		</foreach>
+		FROM (
+			SELECT 
+				DUM_STAT.inci_prcs_stat,
+				IFNULL(inci_type_cd,0)  AS inci_type_cd
+			FROM (
+				SELECT code_id AS inci_prcs_stat
+				FROM COM_CODE
+				WHERE CODE_TYPE ='CS0023'
+			) DUM_STAT
+			LEFT OUTER JOIN(
+				SELECT inci_prcs_stat, inci_type_cd
+				FROM INCI_LEDGER
+				<where>
+					<if test="start_time != null and start_time != ''">
+					<![CDATA[
+						inci_dt >= #{start_time} AND inci_dt < #{end_time}
+					]]>
+					</if>
+				</where>
+			) LED
+			ON DUM_STAT.inci_prcs_stat = LED.inci_prcs_stat
+		) TOT
+		GROUP BY inci_prcs_stat
+		ORDER BY inci_prcs_stat_code
+	</select>
+	
+	<select id="selectIncidentStatustChartData" resultType="map">
+		SELECT 
+			inci_type_cd,
+			SUM(CASE WHEN inci_prcs_stat = '1' THEN 1 ELSE 0 END) prcs_1,
+			SUM(CASE WHEN inci_prcs_stat = '2' THEN 1 ELSE 0 END) prcs_2,
+			SUM(CASE WHEN inci_prcs_stat = '3' THEN 1 ELSE 0 END) prcs_3,
+			SUM(CASE WHEN inci_prcs_stat = '4' THEN 1 ELSE 0 END) prcs_4,
+			SUM(CASE WHEN inci_prcs_stat = '5' THEN 1 ELSE 0 END) prcs_5,
+			SUM(CASE WHEN inci_prcs_stat = '6' THEN 1 ELSE 0 END) prcs_6,
+			SUM(CASE WHEN inci_prcs_stat = '7' THEN 1 ELSE 0 END) prcs_7
+		FROM INCI_LEDGER
+		<where>   
+		<if test="start_time != null and start_time != ''">
+		<![CDATA[
+			inci_dt >= #{start_time} AND inci_dt < #{end_time}
+		]]>
+		</if>
+		</where>		
+		GROUP BY inci_type_cd
+	</select>
+	
+	<select id="selectInstSearchList" resultType="map">
+		SELECT 
+			E.inst_name,
+			(SELECT code_id FROM COM_CODE WHERE code_type="CS0011" AND code_name=E.inst_name) inst_cd, 
+			field_val_cnt AS event_cnt, 
+			IFNULL(t_1,0) AS t_1,
+			IFNULL(t_2,0) AS t_2,
+			IFNULL(t_3,0) AS t_3,
+			IFNULL(t_4,0) AS t_4,
+			IFNULL(t_5,0) AS t_5,
+			IFNULL(t_6,0) AS t_6,
+			IFNULL(t_7,0) AS t_7
+		FROM (
+			SELECT 	A.field_val AS inst_name,
+					COUNT(A.field_val) field_val_cnt
+			FROM    MGR_SEARCH_EVENT A
+			INNER JOIN MGR_SEARCH_RULESET B
+			ON	A.ruleset_id = B.ruleset_id
+			AND	A.reg_time BETWEEN B.open_time AND B.close_time
+			WHERE A.field_val !=""
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND event_time >= #{start_time} AND event_time < #{end_time}
+			]]>
+			</if>
+			GROUP BY field_val			
+		) E
+		LEFT OUTER JOIN (
+			SELECT 	
+				(SELECT code_name FROM COM_CODE WHERE code_type="CS0011" AND code_id = inci_inst_cd) inst_name,	
+				<![CDATA[	
+					SUM(CASE  WHEN inci_prcs_stat = '1' THEN 1  ELSE 0 END)  t_1,
+					SUM(CASE  WHEN inci_prcs_stat = '2' THEN 1  ELSE 0 END)  t_2,
+					SUM(CASE  WHEN inci_prcs_stat = '3' THEN 1  ELSE 0 END)  t_3,
+					SUM(CASE  WHEN inci_prcs_stat = '4' THEN 1  ELSE 0 END)  t_4,
+					SUM(CASE  WHEN inci_prcs_stat = '5' THEN 1  ELSE 0 END)  t_5,
+					SUM(CASE  WHEN inci_prcs_stat = '6' THEN 1  ELSE 0 END)  t_6,
+					SUM(CASE  WHEN inci_prcs_stat = '7' THEN 1  ELSE 0 END)  t_7
+				]]>
+			FROM INCI_LEDGER
+			WHERE 1=1
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND inci_dt >= #{start_time} AND inci_dt < #{end_time}
+			]]>
+			</if>			
+			GROUP BY inci_inst_cd
+		) I
+		ON E.inst_name = I.inst_name
+		ORDER BY field_val_cnt DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+
+	
+	<!-- <select id="selectInstSearchListExport" resultType="java.util.LinkedHashMap">
+		SELECT 
+			E.inst_name 	'기관명', 
+			field_val_cnt	'사고탐지건수', 
+			IFNULL(t_1,0)  	'사고접수',
+			IFNULL(t_2,0)  	'사고분석',
+			IFNULL(t_3,0) 	'소명대기',
+			IFNULL(t_4,0)  	'소명응답',
+			IFNULL(t_5,0)  	'자체종결',
+			IFNULL(t_6,0)  	'기간내종결',
+			IFNULL(t_7,0)  	'기간외종결'
+		FROM (
+			SELECT 	A.field_val AS inst_name,
+					COUNT(A.field_val) field_val_cnt
+			FROM    MGR_SEARCH_EVENT A
+			INNER JOIN MGR_SEARCH_RULESET B
+			ON	A.ruleset_id = B.ruleset_id
+			AND	A.reg_time BETWEEN B.open_time AND B.close_time
+			WHERE A.field_val !=""
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND event_time >= #{start_time} AND event_time < #{end_time}
+			]]>
+			</if>
+			GROUP BY field_val			
+		) E
+		LEFT OUTER JOIN (
+			SELECT 	
+				(SELECT code_name FROM COM_CODE WHERE code_type="CS0011" AND code_id = inci_inst_cd) inst_name,	
+				<![CDATA[	
+					SUM(CASE  WHEN inci_prcs_stat = '1' THEN 1  ELSE 0 END)  t_1,
+					SUM(CASE  WHEN inci_prcs_stat = '2' THEN 1  ELSE 0 END)  t_2,
+					SUM(CASE  WHEN inci_prcs_stat = '3' THEN 1  ELSE 0 END)  t_3,
+					SUM(CASE  WHEN inci_prcs_stat = '4' THEN 1  ELSE 0 END)  t_4,
+					SUM(CASE  WHEN inci_prcs_stat = '5' THEN 1  ELSE 0 END)  t_5,
+					SUM(CASE  WHEN inci_prcs_stat = '6' THEN 1  ELSE 0 END)  t_6,
+					SUM(CASE  WHEN inci_prcs_stat = '7' THEN 1  ELSE 0 END)  t_7
+				]]>
+			FROM INCI_LEDGER
+			WHERE 1=1
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND inci_dt >= #{start_time} AND inci_dt < #{end_time}
+			]]>
+			</if>			
+			GROUP BY inci_inst_cd
+		) I
+		ON E.inst_name = I.inst_name
+		ORDER BY field_val_cnt DESC
+	</select>	 -->
+	<!-- ########## IncidentInfo END ########## -->	
+		
+	<!-- ########## SearchEventCountTop START ########## -->
+	<select id="selectSearchCountToptList" resultType="map">
+		SELECT
+			A.ruleset_id,
+			B.event_nm,	
+			A.cnt
+		FROM(
+			SELECT ruleset_id, MAX(reg_time) reg_time, COUNT(*) cnt
+			FROM    MGR_SEARCH_EVENT A
+			WHERE 1=1
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND event_time >= #{start_time} AND event_time < #{end_time}
+			]]>
+			</if>
+			GROUP BY ruleset_id
+		) A
+		INNER JOIN MGR_SEARCH_RULESET B
+		ON A.ruleset_id = B.ruleset_id
+		AND A.reg_time BETWEEN B.open_time AND B.close_time
+		ORDER BY cnt DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- <select id="selectSearchCountToptListExport" resultType="java.util.LinkedHashMap">
+		SELECT 
+			@ROWNUM:=@ROWNUM + 1 	'순위',
+			event_nm			 	'이벤트명',	
+			cnt						'발생건수'
+		FROM(
+			SELECT		
+				B.event_nm,	
+				A.cnt
+			FROM(
+				SELECT ruleset_id, MAX(reg_time) reg_time, COUNT(*) cnt
+				FROM    MGR_SEARCH_EVENT A
+				WHERE 1=1
+				<if test="start_time != null and start_time != ''">
+				<![CDATA[
+					AND event_time >= #{start_time} AND event_time < #{end_time}
+				]]>
+				</if>
+				GROUP BY ruleset_id
+			) A
+			INNER JOIN MGR_SEARCH_RULESET B
+			ON A.ruleset_id = B.ruleset_id
+			AND A.reg_time BETWEEN B.open_time AND B.close_time		
+			ORDER BY cnt DESC
+		) T,
+		(SELECT @ROWNUM:=0) R
+		ORDER BY cnt DESC
+	</select> -->
+	
+	<!-- ########## SearchEventCountTop END ########## -->
+	
+	<!-- ########## SearchProcessStatus START ########## -->
+	<select id="selectSearchProcessStatusList" resultType="map">
+		SELECT
+			A.ruleset_id,
+			B.event_nm,	
+			A.totCnt,	
+			A.prcs_0,	
+			A.prcs_1,
+			A.prcs_2,
+			A.prcs_3,
+			A.prcs_4,
+			A.event_time
+		FROM(
+			SELECT 
+				ruleset_id, 
+				MAX(reg_time) reg_time,
+				MAX(event_time) event_time,
+				COUNT(*) totCnt,
+				SUM(CASE WHEN handling_type_cd IS NULL THEN 1 ELSE 0 END) prcs_0,	
+				SUM(CASE WHEN handling_type_cd = '1' THEN 1 ELSE 0 END) prcs_1,
+				SUM(CASE WHEN handling_type_cd = '2' THEN 1 ELSE 0 END) prcs_2,
+				SUM(CASE WHEN handling_type_cd = '3' THEN 1 ELSE 0 END) prcs_3,
+				SUM(CASE WHEN handling_type_cd = '4' THEN 1 ELSE 0 END) prcs_4
+			FROM    MGR_SEARCH_EVENT A
+			WHERE 1=1
+			<if test="start_time != null and start_time != ''">
+			<![CDATA[
+				AND event_time >= #{start_time} AND event_time < #{end_time}
+			]]>
+			</if>
+			GROUP BY ruleset_id
+		) A
+		INNER JOIN MGR_SEARCH_RULESET B
+		ON A.ruleset_id = B.ruleset_id
+		AND A.reg_time BETWEEN B.open_time AND B.close_time
+		ORDER BY totCnt DESC
+		<choose>
+			<when test="rows==null">
+				LIMIT 0, 5
+			</when>
+			<otherwise>
+				LIMIT 0, ${rows}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- <select id="selectSearchProcessStatusListExport" resultType="java.util.LinkedHashMap">
+		SELECT 
+			@ROWNUM:=@ROWNUM + 1 	'순위',
+			event_nm		'이벤트',	
+			totCnt		'전체',	
+			prcs_0		'미처리',	
+			prcs_1		'처리',
+			prcs_2		'참고',
+			prcs_4		'중복',
+			prcs_3		'이관',	
+			event_time	'최근발생시간'
+		FROM
+		(	
+			SELECT			
+				B.event_nm,	
+				A.totCnt,	
+				A.prcs_0,	
+				A.prcs_1,
+				A.prcs_2,
+				A.prcs_4,
+				A.prcs_3,		
+				DATE_FORMAT(STR_TO_DATE(A.event_time, '%Y%m%d%H%i'),'%m-%d %H:%i') AS event_time
+			FROM(
+				SELECT 
+					ruleset_id,
+					MAX(reg_time) reg_time,
+					MAX(event_time) event_time,
+					COUNT(*) totCnt,
+					SUM(CASE WHEN handling_type_cd IS NULL THEN 1 ELSE 0 END) prcs_0,	
+					SUM(CASE WHEN handling_type_cd = '1' THEN 1 ELSE 0 END) prcs_1,
+					SUM(CASE WHEN handling_type_cd = '2' THEN 1 ELSE 0 END) prcs_2,
+					SUM(CASE WHEN handling_type_cd = '3' THEN 1 ELSE 0 END) prcs_3,
+					SUM(CASE WHEN handling_type_cd = '4' THEN 1 ELSE 0 END) prcs_4
+				FROM    MGR_SEARCH_EVENT A
+				WHERE 1=1
+				<if test="start_time != null and start_time != ''">
+				<![CDATA[
+					AND event_time >= #{start_time} AND event_time < #{end_time}
+				]]>
+				</if>
+				GROUP BY ruleset_id
+			) A
+			INNER JOIN MGR_SEARCH_RULESET B
+			ON A.ruleset_id = B.ruleset_id
+			AND A.reg_time BETWEEN B.open_time AND B.close_time			
+			ORDER BY totCnt DESC
+		) T,	
+		(SELECT @ROWNUM := 0) R
+		ORDER BY totCnt DESC
+	</select> -->
+	
+	<!-- ########## SearchProcessStatus END ########## -->
+		
+	<select id="selectProcVar" resultType="String">
+		SELECT proc_var FROM MGR_RSC_POLICY
+	</select>
+	
+</mapper>
