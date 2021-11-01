@@ -1,0 +1,28 @@
+---------------------------------------
+[www 패치절차]
+---------------------------------------
+1. www 패치파일 복사(기존파일 백업 요)
+
+2. AdminConfig.xml에 아래 설정 추가(www\ROOT\WEB-INF\conf\AdminConfig.xml_sample 참고)
+
+	<login_otp>false</login_otp>
+
+	<otp>
+		<server>127.0.0.1</server>
+		<port>1812</port>
+		<sharedsecret>sharedsecret</sharedsecret>
+		<timeout>3</timeout>
+	</otp>
+
+3. Tomcat 재기동
+
+4. OTP 설정 순서
+1) AdminConfig.xml에 <login_otp>false<login_otp> 설정으로 로그인 > 사용자 관리 > OTP ID 입력
+2) AdminConfig.xml에 아래 설정들에 OTP서버 정보 입력
+	<otp>
+		<server>127.0.0.1</server>
+		<port>1812</port>
+		<sharedsecret>sharedsecret</sharedsecret>
+		<timeout>3</timeout>
+	</otp>
+3) <login_otp>true<login_otp>로 변경 (OTP 설정 활성화 - 단, OTP ID가 등록안되어있을 경우 로그인 불가능)

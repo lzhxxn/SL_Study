@@ -1,0 +1,270 @@
+<?xml version="1.0"?>
+
+<configuration>
+	<default_language>ko_KR</default_language><!-- KOREA : ko_KR, ENGLISH : en_US .. -->
+	<report_html>false</report_html>
+	<report_hwp>false</report_hwp>
+	<multiple_login>true</multiple_login>
+	<multiple_manager_role>true</multiple_manager_role>
+	<user_ip_restrict>false</user_ip_restrict>
+	<login_retry_cnt>5</login_retry_cnt>
+	<login_retry_time>5</login_retry_time>
+	<complex_passwd>true</complex_passwd>
+	<login_otp>false</login_otp>
+	
+	<dashboard_refresh_sec>60</dashboard_refresh_sec>
+	<dashboard_min_refresh_sec>10</dashboard_min_refresh_sec>
+	<top5_sch_time>5</top5_sch_time>
+	<sms_sch_time>10</sms_sch_time>
+	<agent_chk_time>60</agent_chk_time>
+	<equip_chk_time>5</equip_chk_time>
+	<eps_sch_time>10080</eps_sch_time>
+	<threatdetect_sch_time>10080</threatdetect_sch_time>
+	<my_group_search_limit_min>120</my_group_search_limit_min><!-- MAX : 720(12hour) -->
+	<my_group_search_limit_row>10000</my_group_search_limit_row>
+	<my_group_search_limit_chart_row>10</my_group_search_limit_chart_row>
+	
+	<dashboard>
+		<component>
+			<my_log_search>
+				<max_req_row>1000</max_req_row><!-- Reqeust Rows/Minute, MAX : 1000 -->
+				<max_view_row>10000</max_view_row><!-- View Rows, MAX : 10000 -->
+				<max_stats_row>10000</max_stats_row><!-- Stats Rows -->
+				<max_period_min>60</max_period_min><!-- Period, MAX : 720(12hour) -->
+			</my_log_search>
+			<my_group_log_search>
+				<limit_period_min>120</limit_period_min>
+				<limit_row>10000</limit_row>
+				<limit_chart_row>10</limit_chart_row>
+			</my_group_log_search>
+			<my_log_search_event_ticker>
+				<limit_period_min>120</limit_period_min>
+				<limit_row>10000</limit_row>
+			</my_log_search_event_ticker>
+			<my_log_search_count>
+				<max_period_min>60</max_period_min><!-- Period, MAX : 720(12hour) -->
+			</my_log_search_count>
+			<performance_info>
+				<query>log_type:8</query>
+				<delay_min>-1</delay_min>
+			</performance_info>
+		</component>
+	</dashboard>
+	
+	<init_time>
+		<eps_total_event_list_day>2</eps_total_event_list_day>
+	</init_time>
+	
+	<log_search>
+		<search_client>
+			<connect_timeout>5</connect_timeout>
+		</search_client>
+		<search_time_type>AUTO</search_time_type>
+		<visible_length_check_fields>original_log</visible_length_check_fields>
+		<visible_length>500</visible_length>
+		<newline_string>/@/</newline_string>
+		<null_string>(null)</null_string>
+		<access_check_field>src_asset_group_cd,dstn_asset_group_cd,eqp_asset_group_cd</access_check_field>
+		<stat_limit_cnt>10000000</stat_limit_cnt>
+		<request_timeout>0</request_timeout>
+		<max_save_log_cnt>0</max_save_log_cnt>
+		<max_filter_min>10</max_filter_min>
+		<req_rows_to_save>10000</req_rows_to_save>
+		<max_save_mylog_cnt>1000000000000</max_save_mylog_cnt>
+		<max_write_mylog_cnt>10000</max_write_mylog_cnt>
+		<relation_analysis_list>
+			<relation_analysis>
+				<relation_analysis_field>log_type</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0001</relation_analysis_name>
+				<relation_analysis_value>1</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_type</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0002</relation_analysis_name>
+				<relation_analysis_value>2|3</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_type</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0003</relation_analysis_name>
+				<relation_analysis_value>12</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_type</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0004</relation_analysis_name>
+				<relation_analysis_value>32</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_type</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0005</relation_analysis_name>
+				<relation_analysis_value>13</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_code</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0006</relation_analysis_name>
+				<relation_analysis_value>160102</relation_analysis_value>
+			</relation_analysis>
+			<relation_analysis>
+				<relation_analysis_field>log_code</relation_analysis_field>
+				<relation_analysis_name>LBL.SYS.0007</relation_analysis_name>
+				<relation_analysis_value>160101</relation_analysis_value>
+			</relation_analysis>
+		</relation_analysis_list>
+		<crypt_fields></crypt_fields>
+		<log_schedule>
+			<log_schedule_chk_time>10080</log_schedule_chk_time>
+			<log_schedule_max_save_log_cnt>100000000</log_schedule_max_save_log_cnt>
+		</log_schedule>
+	</log_search>
+	
+	<fault_event>
+		<ruleset_max_count>1000</ruleset_max_count>
+		<reg_ruleset_max_count>100</reg_ruleset_max_count>
+	</fault_event>
+	
+	<weblog_event>
+		<ruleset_max_count>300</ruleset_max_count>		
+	</weblog_event>
+	
+	<search_event>
+		<log_max_count>500000</log_max_count><!-- in 10 Minute -->
+		<system_link>false</system_link>
+		<case_period>10080</case_period><!-- seven days, Minute -->
+		<max_tagging_expire_period>1440</max_tagging_expire_period> <!-- Minute, default : 1440 (1 Day) , max : 525600 (1 Year) -->
+	</search_event>
+	
+	<top_statistics>
+		<fields>
+			<src_ip />
+			<dstn_ip />
+			<dstn_port />
+			<attack_nm />
+			<src_country_name />
+			<dstn_country_name />
+			<eqp_ip />
+		</fields>
+		<reports>
+			<file_name>
+				<default>top_default</default>
+				<src_ip>top_ip</src_ip>
+				<dstn_ip>top_ip</dstn_ip>
+				<eqp_ip>top_ip</eqp_ip>
+			</file_name>
+			<path>/WEB-INF/reports/top_stat/</path>
+		</reports>
+	</top_statistics>
+
+	<search_statistics>
+		<group_field>src_ip</group_field>
+		<field_caption>
+			<asset_nm>LBL.SYS.0008</asset_nm>
+			<grade>LBL.SYS.0009</grade>
+			<department>LBL.SYS.0010</department>
+		</field_caption>
+		<reports>
+			<file_name>
+				<default>search_top_default</default>
+				<asset_nm>asset</asset_nm>
+				<total>total</total>
+				<time>time</time>
+			</file_name>
+			<path>/WEB-INF/reports/search_top/</path>
+		</reports>
+		<field_max_count>10</field_max_count>
+		<log_max_count>10000000</log_max_count><!-- in 60 Minute -->
+		<menu_max_count>10</menu_max_count>
+		<day_time>9-18</day_time>
+	</search_statistics>
+
+	<management>
+		<storage>
+			<default_path>
+				<processing_path>/CloudESM/data/processing/</processing_path>
+				<storage_path>/CloudESM/data/storage/</storage_path>
+			</default_path>
+		</storage>
+		<equipment>
+			<init_asset_value>
+				<group_cd>1</group_cd>
+				<eqp_type_cd>11</eqp_type_cd>
+			</init_asset_value>
+		</equipment>
+	</management>
+	
+	<sysdata>
+		<user_tagging>
+			<max_derv_fld_cnt>5</max_derv_fld_cnt>
+		</user_tagging>
+	</sysdata>
+	
+	<restrict_in_collector>false</restrict_in_collector>
+
+	<parser_id_range>50000</parser_id_range>
+
+	<upload_path>../store/upload/</upload_path>
+
+	<policy_upload_path>/resources/upload/policy/</policy_upload_path>
+	<policy_file_ext>.bro</policy_file_ext>
+
+	<csv_charset>EUC-KR</csv_charset>
+
+	<asset_export_prefix>INF.SYS.0001</asset_export_prefix>
+	<blacklist_export_prefix>INF.SYS.0001</blacklist_export_prefix>
+
+	<incident_no_prefix>T</incident_no_prefix><!-- 사고번호문자(1자리) -->
+	<incident_row_data_key>eqp_dt,attack_nm,src_ip,src_port,dstn_ip,dstn_port,sensor_ip</incident_row_data_key>
+	<incident_row_data_key_seperator>|</incident_row_data_key_seperator>
+	<incident_row_data_value_seperator>,</incident_row_data_value_seperator>	
+	<incident_mail_info><!-- 사고관리 메일의 기본정보 설정 -->
+		<mail_addr></mail_addr><!-- 발신자 메일 주소 : 설정을 주석처리하거나 value값이 없으면 신고기관 정보의 전자우편 사용 -->
+		<phone_number></phone_number><!-- 발신자 전화번호 : 설정을 주석처리하거나 value값이 없으면 신고기관 정보의 휴대폰번호 사용 -->
+	</incident_mail_info>
+	<incident_mail_title></incident_mail_title>
+	<incident_mail_template><![CDATA[
+		<HTML>
+			<HEAD><TITLE>@@mail_title</TITLE></HEAD>
+			<BODY><PRE>@@mail_msg</PRE><PRE>@@mail_signature</PRE></BODY>
+		</HTML>
+	]]></incident_mail_template>
+	<incident_mail_signature></incident_mail_signature>
+	
+	<license>
+		<warning_quota>7</warning_quota>
+		<warning_percentage>90</warning_percentage>
+	</license>
+	
+	<pcap_file_code>14</pcap_file_code>
+	
+	<character_limit>8192</character_limit>
+	
+	<performance>
+		<query>log_type:8</query>
+		<delay_min>-1</delay_min>
+		<default_config_list>
+			<config>
+				<size>1</size>		<!-- 1 or 2 -->
+				<name>LBL.SYS.0011</name>	<!-- Chart name -->
+				<type>MA</type>		<!-- MA or MC or ML or MS --><!-- MA:Area or MC:Column or ML:Line or MS:Stacked -->
+				<fields>memory_used_percent|memory_free_percent</fields>	<!-- ex:total_cpu_idle|total_cpu_user|total_cpu_combined -->
+			</config>
+			<config>
+				<size>1</size>
+				<name>CPU</name>
+				<type>MC</type>
+				<fields>total_cpu_idle|total_cpu_user|total_cpu_combined</fields>
+			</config>
+			<config>
+				<size>2</size>
+				<name>LBL.SYS.0012</name>
+				<type>ML</type>
+				<fields>diskusage_use_percent_1|diskusage_use_percent_2|diskusage_use_percent_3</fields>
+			</config>
+		</default_config_list>
+	</performance>
+	
+	<otp>
+		<server>127.0.0.1</server>
+		<port>1812</port>
+		<sharedsecret>sharedsecret</sharedsecret>
+		<timeout>3</timeout>
+	</otp>
+</configuration>

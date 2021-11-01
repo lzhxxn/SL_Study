@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seculayer.web.login.dao.LoginDAO">
+	<select id="detailUserInfo" resultType="map">
+	SELECT	    A.user_id,
+				A.user_otp,
+				A.user_nm,
+				A.passwd,
+				A.tel_no,
+				A.mobile_no,
+				A.mail_addr,
+				A.role_id,
+				A.group_cd,
+				A.auth_ip,
+				A.login_menu_id,
+				(SELECT flag1 
+				 FROM COM_CODE
+				 WHERE code_type = 'CS0044'
+				   AND code_id = A.login_menu_id 
+				 ) AS login_menu,				
+				IFNULL(A.alarm_mode,'') alarm_mode,
+				A.description,
+				A.reg_dt,
+				(SELECT GROUP_CONCAT(cust_id) 
+				 FROM COM_USER_CUST
+				 WHERE user_id= #{userId}
+				 ) AS cust_id				 
+		FROM   COM_USER A
+		WHERE  A.user_id = #{userId}
+		AND    A.del_yn = "N"
+	</select>
+	
+	<update id="updqteUserLastConnDt">
+		UPDATE COM_USER 
+			SET last_conn_dt = DATE_FORMAT(NOW(),'%Y%m%d%H%i%S') 
+		WHERE user_id =#{userId}	
+	</update>
+	
+</mapper>
