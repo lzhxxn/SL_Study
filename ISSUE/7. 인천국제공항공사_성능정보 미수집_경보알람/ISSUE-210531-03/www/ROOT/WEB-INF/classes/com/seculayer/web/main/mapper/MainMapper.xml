@@ -716,10 +716,10 @@
 				      	  WHEN '6'  THEN '/management/equip_list.html'
 				     	  WHEN '7'  THEN '/management/agent_list.html'
 				      	  WHEN '11' THEN '/event2/rel_event_list.html'
-				      	  WHEN '12' THEN '/performance/performance_list.html'
+				      	  WHEN '12' THEN '/monitoring/performance_list.html'
 									ELSE '' 
 			END  AS info_page,
-			CASE WHEN alarm_cd IN ('3','4','5','11', '12') THEN 'Y' 
+			CASE WHEN alarm_cd IN ('3','4','5','11') THEN 'Y' 
 													 ELSE 'N' END AS date_param,
 			sdt,
 			ddt

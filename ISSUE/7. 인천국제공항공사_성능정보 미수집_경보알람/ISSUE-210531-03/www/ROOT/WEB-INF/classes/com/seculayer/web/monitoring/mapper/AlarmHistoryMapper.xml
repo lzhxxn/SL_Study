@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.seculayer.web.monitoring.dao.AlarmHistoryDAO">
+
+	<select id="selectAlarmHistoryListForTreeCount" resultType="int">
+		SELECT COUNT(*)
+		FROM ALARM_HISTORY
+		WHERE <![CDATA[ check_time >= #{start_time} AND check_time < #{end_time} ]]>
+	</select>
+	
+	<select id="selectLastGrpCount" resultType="int">
+		SELECT COUNT(*)
+		FROM ALARM_HISTORY
+		WHERE check_time = ( SELECT check_time
+							FROM ALARM_HISTORY
+							WHERE <![CDATA[ check_time >= #{start_time} AND check_time < #{end_time} ]]>
+							ORDER BY check_time DESC
+		 					LIMIT #{lastRowIndex},1
+		 					)
+	</select>
+	
+	<select id="selectRealLastGrpCount" resultType="int">
+		SELECT COUNT(*)
+		FROM (					 
+				SELECT check_time
+				FROM ALARM_HISTORY
+				WHERE <![CDATA[ check_time >= #{start_time} AND check_time < #{end_time} ]]>
+				ORDER BY check_time DESC
+				LIMIT #{startIndex},#{per_page}
+     		 ) A
+		WHERE check_time = ( SELECT check_time
+					       	FROM ALARM_HISTORY
+					       	WHERE <![CDATA[ check_time >= #{start_time} AND check_time < #{end_time} ]]>
+					       	ORDER BY check_time DESC
+					       	LIMIT #{lastRowIndex},1
+					     	)
+	</select>
+	
+	<select id="selectAlarmHistoryListForTree" resultType="map">
+		SELECT  
+			check_time,
+			check_day,
+			check_hour,
+			grp_cnt,
+			alarm_cd,
+			alarm_nm,
+			CASE WHEN alarm_cd IN ('1','3','5','10','11')
+				 THEN CONCAT(status_nm, #{LBL_COM_0153})
+				 ELSE #{LBL_COM_0126}
+			END AS alarm_deco,
+ 			CASE alarm_cd WHEN '3'  THEN '/event/search_event_list.html'
+				      	  WHEN '4'  THEN '/event/blacklist_event_list.html'
+				      	  WHEN '5'  THEN '/event/sms_event_list.html'
+				      	  WHEN '6'  THEN '/management/equip_list.html'
+				     	  WHEN '7'  THEN '/management/agent_list.html'
+				      	  WHEN '11' THEN '/event2/rel_event_list.html'
+				      	  WHEN '12' THEN '/monitoring/performance_list.html'
+									ELSE '' 
+			END  AS info_page,
+			CASE WHEN alarm_cd IN ('3','4','5','11') THEN 'Y' 
+													 ELSE 'N' END AS date_param,
+			sdt,
+			ddt			   
+		FROM (
+			SELECT
+				A.check_time,
+			    DATE_FORMAT(CONCAT(A.check_time,'00'),'%Y%m%d') AS check_day,
+			    DATE_FORMAT(CONCAT(A.check_time,'00'),'%H%i') AS check_hour,
+			    A.alarm_cd,
+			    (
+			     SELECT code_name
+			     FROM COM_CODE
+			     WHERE code_type = 'CS0018'
+			     AND code_id = A.alarm_cd
+			    ) AS alarm_nm,
+			    (
+			     SELECT code_name
+			     FROM COM_CODE
+			     WHERE code_type = CASE WHEN A.alarm_cd = '1' THEN 'CS0019' ELSE 'CS0005' END
+			     AND code_id = A.status
+			    ) AS status_nm,
+			    (
+			     SELECT DISTINCT COUNT(*)
+			     FROM ALARM_HISTORY
+			     WHERE <![CDATA[ check_time >= #{start_time} AND check_time < #{end_time} ]]>
+			       AND check_time = A.check_time
+			    ) AS grp_cnt,
+			    A.sdt,
+			    A.ddt
+			FROM ALARM_HISTORY A
+			WHERE  <![CDATA[ A.check_time >= #{start_time} AND A.check_time < #{end_time} ]]>
+			) TBL
+			  ORDER BY TBL.check_day DESC,TBL.check_time DESC
+			  LIMIT #{startIndex}, #{per_page}
+	</select>
+	
+	<select id="selectTop3AlarmHistoryList" resultType="map">
+		SELECT	event_time,
+				alarm_cd,
+				alarm_nm,
+				status_nm
+		FROM (
+			SELECT	DATE_FORMAT(A.event_time,'%Y%m%d%H%i') event_time,
+				    A.alarm_cd,
+				    (
+				     SELECT code_name
+				     FROM COM_CODE
+				     WHERE code_type = 'CS0018'
+				     AND code_id = A.alarm_cd
+				    ) AS alarm_nm,
+				    (
+				     SELECT code_name
+				     FROM COM_CODE
+				     WHERE code_type = CASE WHEN A.alarm_cd = '1' THEN 'CS0019' ELSE 'CS0005' END
+				     AND code_id = A.status
+				    ) AS status_nm
+			FROM	ALARM_HISTORY A
+			WHERE 	event_time >= DATE_FORMAT(NOW(),'%Y%m%d')
+			AND DATE_FORMAT(A.event_time,'%Y%m%d%H%i') IN (
+				SELECT event_time 
+				FROM (
+					SELECT event_time FROM (
+						SELECT DATE_FORMAT(event_time,'%Y%m%d%H%i') AS event_time 
+						FROM ALARM_HISTORY
+						WHERE event_time >= DATE_FORMAT(NOW(),'%Y%m%d')
+					) C
+					GROUP BY C.event_time
+					ORDER BY event_time DESC
+					LIMIT 3
+				) B
+			 )
+		 ) TBL
+		 ORDER BY TBL.event_time DESC
+	</select>
+</mapper>
